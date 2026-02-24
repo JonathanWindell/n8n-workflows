@@ -1,0 +1,858 @@
+{
+  "name": "Gmail Workflow Template",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [-1776, 1616],
+      "id": "8a355fd2-3d40-4826-81c0-f2858ccd7617",
+      "name": "Google Gemini Chat Model (Or replace with your LLM)",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 4,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Finance & Bills",
+        "options": {},
+        "embeds": {
+          "values": [
+            {
+              "description": "=Description: {{ $('Gmail Trigger').item.json.snippet }}",
+              "author": "={{ $('Gmail Trigger').item.json.From }}",
+              "color": "={{ 15844367 }}",
+              "timestamp": "=",
+              "title": "={{ $('Gmail Trigger').item.json.Subject }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [-1632, 2128],
+      "id": "39ba8952-17ac-4fee-b238-4dc22a0a2718",
+      "name": "Discord - Finance & Bills",
+      "webhookId": "",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Webhook: Finance & Bills"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Security & Alerts",
+        "options": {},
+        "embeds": {
+          "values": [
+            {
+              "description": "=Description: {{ $('Gmail Trigger').item.json.snippet }}",
+              "author": "={{ $('Gmail Trigger').item.json.From }}",
+              "color": "={{ 15158332 }}",
+              "timestamp": "=",
+              "title": "={{ $('Gmail Trigger').item.json.Subject }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [-1632, 1792],
+      "id": "91e01840-82bd-4610-b337-59588e3d55b0",
+      "name": "Discord - Security & Alerts",
+      "webhookId": "",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Webhook: Security & Alerts"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "=Subject: {{ $json.Subject }}\nEmail Body: {{ $json.snippet }}\nFrom: {{ $json.From }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Security & Alerts",
+              "description": "Core Definition: Critical security warnings, login alerts, and server downtime. Explicitly includes security alerts from development platforms.\n\nPositive Indicators (Include):\n    General: \"Verify your account\", \"New login from...\", \"Password reset\", \"2FA code\".\n    Dev Security: \"Dependabot alert\", \"Vulnerability detected\", \"GitHub Security\", \"Secret scanning\", \"Token leaked\".\n\nNegative Indicators (Strictly Exclude):\n    Development Noise: \"Workflow run\", \"Build failed\", \"Pull Request\", \"Merge\", \"Deployment\" (These belong in the Development category).\n    General newsletters. (Should be placed in Marketing & Social)"
+            },
+            {
+              "category": "Education ",
+              "description": "Core Definition: All official academic communication regarding studies at <Your University Name> AND exchange studies at <Your Exchange University>.\n\nAllowed Sources (Whitelist):\n    University Domains: <@your-university.edu>, <@exchange-university.edu>.\n    Systems: Canvas, Blackboard, Moodle, Student Portals.\n\nPositive Indicators (Include):\n    Coursework: Assignments, Syllabus, Schedule, Exams, Grades.\n    Exchange Specifics: Erasmus, Learning Agreement, Grant Agreement, International Office.\n    Specific Keywords: <Your Study Subjects like 'Programming', 'Marketing', etc.> (when context is academic).\n\nContextual Override (Fix for Finance Hallucinations):\n    If an email comes from a learning platform or mentions 'Assignment', it must be classified as Education, NEVER Finance, even if it contains words like 'Bank', 'Budget', or dates that look like due dates. These refer to course concepts or submission deadlines, not financial invoices.\n\nNegative Indicators (Strictly Exclude):\n    Actual Invoices: Demands for payment, accommodation rent, or student union fees (move these to Finance specifically Transactional).\n    Third-Party Marketing: Coursera, Udemy, or generic newsletters not from the university."
+            },
+            {
+              "category": "Finance & Bills",
+              "description": "Core Definition: Manage personal finances, including incoming grants, loans, and outgoing actionable payments.\n\nPositive Indicators (Include):\n    Income/Grants: Student aid, grants, Stipends, \"Payout\", \"Grant Agreement\".\n    Bills/Debts: Invoices, Rent, Tax documents, Unpaid balances.\n    Banking: Security alerts strictly from BANKS (<Your Bank 1>, <Your Bank 2>, <Your Payment App>).\n\nNegative Indicators (Strictly Exclude):\n    General Account Security: Login alerts, password resets, or \"unrecognized location\" from non-financial platforms like GitHub, Google, Facebook (These MUST go to Security & Alerts).\n    Past Purchases: Receipts for things already bought (move to Transactional).\n    Academic Scheduling (Crucial): Do NOT classify emails as Finance if they refer to Booking of Supervision, Study Rooms, or Labs. These are calendar events, not purchases."
+            },
+            {
+              "category": "Transactional",
+              "description": "Core Definition: Passive notifications regarding completed purchases, shipping, and logistics. Low priority archives.\n\nPositive Indicators (Include):\n    Receipts: \"Order confirmation\", \"Receipt\", \"Payment successful\", \"Thanks for your order\".\n    Shipping: \"Your package is on the way\", <Your Local Courier 1>, <Your Local Courier 2> tracking updates.\n    Accounts: \"Terms of service update\", \"Privacy policy update\".\n\nNegative Indicators (Strictly Exclude):\n    Travels: Flight tickets, Train bookings, Hotel reservations - These must go to the 'Travels' category.\n    Income/Grants: Student Loans, Stipends (move to Finance).\n    Actionable Bills: Unpaid invoices (move to Finance).\n    Developer Tools: Updates regarding Postman, GitHub, or Hosting plans (move to Development)"
+            },
+            {
+              "category": "Marketing & Social",
+              "description": "Core Definition: Marketing newsletters, promotional offers, and general social media notifications (e.g., new posts, comments, likes, and connection requests from LinkedIn, Facebook, Instagram). This includes 'Catch up on these posts' or 'New updates from your network'. Strictly exclude job alerts, 'jobs you might be interested in', and recruitment messages (which belong in the Work Opportunities category). \n\nIf mail is sent from n8n DO NOT classify as marketing & social. DO NOT PUT ANY LABEL ON THIS MAIL"
+            },
+            {
+              "category": "Other",
+              "description": "Core Definition: Mail that does not fit in any other category. "
+            },
+            {
+              "category": "Travels ",
+              "description": "Core Definition: Emails containing booking confirmations, tickets, itineraries or receipts related to travel and accommodation. This includes airlines, trains, hotels, and rental services. Exclude newsletters, promotional offers, and 'travel inspiration'. "
+            },
+            {
+              "category": "Internships ",
+              "description": "Core Definition: Correspondence regarding active internship or job applications where a submission has been made or contact established. This includes 'application received' confirmations, interview invitations, coding tests, and personal replies from recruiters. Strictly exclude generic job alerts, 'jobs you might like', and newsletters from platforms like LinkedIn, Indeed, or Glassdoor. "
+            },
+            {
+              "category": "Work Opportunities",
+              "description": "Core Definition: Automated job alerts, daily digests, and recommended opportunities from career platforms like LinkedIn, Glassdoor, Indeed, and similar job boards. This includes 'Jobs you might be interested in', network updates, and new posting notifications. Strictly exclude direct personal emails from recruiters, interview invitations, or updates on active applications (which belong in the Internship category)"
+            },
+            {
+              "category": "Development & Github",
+              "description": "Core Definition: Notifications related to software development, CI/CD pipelines, version control, and cloud hosting for personal projects.\n\nPositive Indicators (Include):\n    CI/CD: \"Workflow run\", \"Build failed\", \"Build success\", \"Deployment\", \"Pipeline status\", \"GitHub Actions\".\n    Collaboration: \"Pull Request\", \"Review requested\", \"Merge\", \"Issue created\", \"Comment on issue\".\n    Platforms: GitHub, GitLab, Vercel, Netlify, Postman, Heroku (unless it's a bill/invoice).\n    Mail from noreply@github.com & notifications@github.com should also be placed here. ASSUMING that mail does not contain anything in negative indicators. \n\nNegative Indicators (Strictly Exclude):\n    Security Alerts: \"Dependabot\", \"Vulnerability detected\", \"New login from...\", \"Password reset\", \"2FA\", \"Secret scanning\" (These MUST go to Security & Alerts).\n    Academic Code: Coursework related to coding (These MUST go to Education).\n    Invoices: Payment receipts for hosting (These MUST go to Finance)."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [-1776, 1136],
+      "id": "b381d4da-6ba5-4f6f-9ecb-8c0f983ae2e8",
+      "name": "Mail - Text Classifier",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 3,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [-1888, 672],
+      "id": "be1d095f-262d-4f4c-8101-60c600644bf3",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_TRANSACTIONAL_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1824, 2304],
+      "id": "bd9d1bb8-78c3-45e3-bfa7-b4cba3187914",
+      "name": "Add: Transactional",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_FINANCE_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1440, 2128],
+      "id": "07cecd79-c391-460c-8d41-a11f49f7a2df",
+      "name": "Add: Finance & Bills",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_MARKETING_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1824, 2464],
+      "id": "656f8ed5-d8c3-42f4-926f-25b07ca49904",
+      "name": "Add: Marketing & Social",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_OTHER_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1824, 2624],
+      "id": "b221202b-491d-4902-8319-bb5dae26f794",
+      "name": "Add: Other",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_EDUCATION_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1440, 1968],
+      "id": "9c7aa320-028e-4240-98ba-e4bc3ef15b64",
+      "name": "Add: Education",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_SECURITY_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1440, 1792],
+      "id": "f953682d-80c8-4e09-b74b-0155b6756d92",
+      "name": "Add: Security & Alerts",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_TRAVELS_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1824, 2800],
+      "id": "5a2f2208-d4e5-41bd-aa99-5eebcc07b6cb",
+      "name": "Add: Travels",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_INTERNSHIPS_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1824, 2976],
+      "id": "835c36b6-c2af-41b2-ad90-fe9a22804d2d",
+      "name": "Add: Internships",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_WORK_OPPORTUNITIES_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [-1824, 3152],
+      "id": "639b71f3-65e0-4894-890c-5cc93f89f8e8",
+      "name": "Add: Work Opportunities",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "<YOUR_TELEGRAM_CHAT_ID>",
+        "text": "={{ $('Gmail Trigger').item.json.snippet }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-1824, 1792],
+      "id": "377c545b-ca25-481f-aa12-47e9f35f4988",
+      "name": "Telegram - Security & Alerts",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "<YOUR_TELEGRAM_CHAT_ID>",
+        "text": "={{ $('Gmail Trigger').item.json.snippet }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-1824, 2128],
+      "id": "46facd4c-dde7-495e-9822-a0129c3d9eb3",
+      "name": "Telegram - Finance & Bills",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["INBOX"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-1248, 2528],
+      "id": "eb2524a1-141e-47a9-83d9-431d932dbed7",
+      "name": "Remove: Inbox",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": ["<YOUR_DEVELOPMENT_LABEL_ID>"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [-1824, 3312],
+      "id": "55290be5-4a30-446c-a51a-189805f16eff",
+      "name": "Add: Development & Github",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Education",
+        "options": {},
+        "embeds": {
+          "values": [
+            {
+              "description": "=Description: {{ $json.snippet }}",
+              "color": "={{ 3447003 }}",
+              "timestamp": "=",
+              "title": "={{ $json.Subject }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [-1824, 1968],
+      "id": "4adbc6cb-4b28-4734-8fd8-14e0be214009",
+      "name": "Discord - Education",
+      "webhookId": "",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Webhook: Education"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation\n\n",
+        "height": 448,
+        "width": 928,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1984, 624],
+      "typeVersion": 1,
+      "id": "a6b87041-393a-4459-9117-ad09c18d38ed",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Processing\n",
+        "height": 672,
+        "width": 928,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1984, 1088],
+      "typeVersion": 1,
+      "id": "60dbd6bd-51ff-44a5-b4f3-11b2aae33f16",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Output\n",
+        "height": 1712,
+        "width": 928,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1984, 1776],
+      "typeVersion": 1,
+      "id": "df562834-0cfb-4837-9fb9-ef5723655b68",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Description:\nThis workflow is triggered every time a mail is sent to specified mail. It processes mail based on given instructions and notifies and moves mail to correct folder",
+        "height": 144,
+        "width": 384,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1984, 464],
+      "typeVersion": 1,
+      "id": "8e0143f9-a536-40ee-8f40-995449cddfc9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-1568, 912],
+      "id": "9d82fcbf-f3db-400c-9781-1374e8b6f0cd",
+      "name": "Loop over every mail"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [-1264, 928],
+      "id": "9149716b-9374-46d9-a63c-b394e764bcd7",
+      "name": "Wait request timeout"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "58dba3f4-7a13-40c8-bc6d-9d48567f879b",
+              "leftValue": "={{ $json.From }}",
+              "rightValue": "<your-email@example.com>",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "d9efb160-d783-4033-ba67-8e55c6e3e0f6",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "Daily News Feed - ",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-1888, 896],
+      "id": "0f185075-4127-4ab5-b21c-3016963fa71e",
+      "name": "Check for daily news letter"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [-1568, 672],
+      "id": "1ef2cdaa-0b20-4f89-b8a8-8acc2a20aea2",
+      "name": "Disregard daily news letter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model (Or replace with your LLM)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Mail - Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail - Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Security & Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord - Education",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram - Finance & Bills",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Transactional",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Marketing & Social",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Other",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Travels",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Internships",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Work Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add: Development & Github",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check for daily news letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord - Security & Alerts": {
+      "main": [
+        [
+          {
+            "node": "Add: Security & Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord - Finance & Bills": {
+      "main": [
+        [
+          {
+            "node": "Add: Finance & Bills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Transactional": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Finance & Bills": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Marketing & Social": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Other": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Education": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Security & Alerts": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Travels": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Internships": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Work Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Security & Alerts": {
+      "main": [
+        [
+          {
+            "node": "Discord - Security & Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Finance & Bills": {
+      "main": [
+        [
+          {
+            "node": "Discord - Finance & Bills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add: Development & Github": {
+      "main": [
+        [
+          {
+            "node": "Remove: Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord - Education": {
+      "main": [
+        [
+          {
+            "node": "Add: Education",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop over every mail": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait request timeout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait request timeout": {
+      "main": [
+        [
+          {
+            "node": "Mail - Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for daily news letter": {
+      "main": [
+        [
+          {
+            "node": "Disregard daily news letter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop over every mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "064c2b82-3b68-4a3d-ba30-58ff449d4250"
+}
