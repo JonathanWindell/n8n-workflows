@@ -1,0 +1,502 @@
+{
+  "name": "News Feed - Tech Template",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8a2e9082-1d72-44ad-a282-1cfb821ea862",
+              "leftValue": "={{ $json.pubDate }} ",
+              "rightValue": "={{ $now.minus({ hours: 24 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [560, -144],
+      "id": "487b4b07-fd6e-469e-a04b-f2dba7c5e29f",
+      "name": "Check news source - 24 hours"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sources",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [176, -144],
+      "id": "3d53eefa-222b-4d38-890d-3a40a19d894b",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-240, -160],
+      "id": "94f9f1c9-10ce-4fa2-9fc2-cc3e9650d222",
+      "name": "Loop before filtering"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [160, 528],
+      "id": "487d9c0e-f3a0-497e-8316-84d7642fb70d",
+      "name": "Google Gemini Chat Model (Or your LLM)",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 6
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [-32, 288],
+      "id": "81118253-1947-4b97-945e-979ef6577160",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    // Sources\n    sources: [\n      \"https://feeds.arstechnica.com/arstechnica/index\",\n      \"https://www.theverge.com/rss/index.xml\",\n      \"https://venturebeat.com/category/ai/feed\",\n      \"https://techcrunch.com/feed/\",\n      \"https://dev.to/feed\"\n    ],\n    interest_rules: [\n      // AI\n      \"LLM\", \"GPT\", \"Claude\", \"Gemini\", \"Llama\", \"OpenAI\", \"Anthropic\", \"Generative AI\", \"RAG\", \"Inference\", \"AI Ethics\",\n      \n      // Hardware\n      \"Nvidia\", \"AMD\", \"Intel\", \"GPU\", \"CPU\", \"CUDA\", \"Ryzen\", \"Xeon\", \"H100\", \"Blackwell\", \"TSMC\", \"Raspberry Pi\", \"DDR5\",\n      \n      // Infrastructure & Network\n      \"Kubernetes\", \"Docker\", \"Terraform\", \"Linux\", \"Cisco\", \"Juniper\", \"Firewall\", \"Router\", \"Switch\", \"Datacenter\", \"AWS\", \"Azure\",\n      \n      // Security\n      \"CVE\", \"Vulnerability\", \"Zero-day\", \"Exploit\", \"Ransomware\", \"Cybersecurity\"\n    ]\n  }\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-16, -144],
+      "id": "31cdceea-3aae-44cd-a418-af971e400843",
+      "name": "Get News Sources and Interest Rules"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-256, 272],
+      "id": "5f53eeeb-18be-4de3-a420-9dec2f47f57e",
+      "name": "Loop after filtering"
+    },
+    {
+      "parameters": {
+        "content": "## Description:\nThis workflow reads a list of news sources and interests, summarises the news and sends a daily mail",
+        "height": 96,
+        "width": 400,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-560, -336],
+      "typeVersion": 1,
+      "id": "bd3e9981-2858-4358-969b-dd23edb5a332",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet htmlEmail = `\n<div style=\"font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; color: #333333;\">\n  <div style=\"background-color: #2c3e50; padding: 25px; text-align: center; border-radius: 8px 8px 0 0;\">\n    <h1 style=\"color: #ffffff; margin: 0; font-size: 24px; font-weight: 300; letter-spacing: 1px;\">Daily News Letter</h1>\n    <p style=\"color: #bdc3c7; margin: 5px 0 0; font-size: 13px; text-transform: uppercase;\">${new Date().toISOString().split('T')[0]}</p>\n  </div>\n  <div style=\"background-color: #ffffff; border: 1px solid #e0e0e0; border-top: none;\">\n`;\n\nif (items.length > 0) {\n    for (const item of items) {\n        const title = item.json.title || \"Header missing\";\n        \n        let summary = item.json.text || item.json.response || item.json.summary || \"<p>Summary not possible.</p>\";\n\n        const link = item.json.link || \"#\";\n\n        htmlEmail += `\n        <div style=\"padding: 25px; border-bottom: 1px solid #f0f0f0;\">\n            <h2 style=\"margin-top: 0; margin-bottom: 10px; font-size: 18px; line-height: 1.4;\">\n                <a href=\"${link}\" style=\"text-decoration: none; color: #2c3e50; font-weight: 700;\">${title}</a>\n            </h2>\n            \n            <div style=\"font-size: 15px; line-height: 1.6; color: #555555; margin-bottom: 15px;\">\n                ${summary}\n            </div>\n\n            <a href=\"${link}\" style=\"display: inline-block; font-size: 13px; font-weight: 600; color: #3498db; text-decoration: none;\">\n                Read full article &rarr;\n            </a>\n        </div>\n        `;\n    }\n} else {\n    htmlEmail += `<div style=\"padding: 40px; text-align: center; color: #7f8c8d;\">No relevant articles found today.</div>`;\n}\n\nhtmlEmail += `\n    <div style=\"background-color: #f9f9f9; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; color: #95a5a6;\">\n      Automatically generated by n8n\n    </div>\n  </div>\n</div>\n`;\n\nreturn [{\n    json: {\n        subject: `News summary: ${new Date().toISOString().split('T')[0]}`,\n        htmlBody: htmlEmail\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-256, 512],
+      "id": "d9a5ae0d-8c4e-4817-9dec-66fdaa3af592",
+      "name": "Aggregate all news summaries "
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Tech News"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-432, -160],
+      "id": "0455919a-30d1-443e-8ff8-be23a1a93854",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [848, -128],
+      "id": "7f86f7db-8f85-4501-a8aa-3a642cbc646d",
+      "name": "No Operation, discards irrelevant news"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "<YOUR_TECH_NEWS_LABEL_ID>"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [16, 752],
+      "id": "3583478d-08cf-4b80-8227-2e05b2536cfb",
+      "name": "Add label - Tech news",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "<your-email@example.com>",
+        "subject": "Daily News Feed - Tech",
+        "message": "={{ $json.subject }}, {{ $json.htmlBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [-256, 752],
+      "id": "67802227-044b-46cc-b6b0-3ee99847d127",
+      "name": "Send mail",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3910cb1-c473-4c69-82d4-744d8e04322d",
+              "name": "title",
+              "value": "={{ $('Check for interest Rules').item.json.title }} ",
+              "type": "string"
+            },
+            {
+              "id": "f6d36f64-f83d-4c38-b2ef-bcd09365da10",
+              "name": "summary",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "ccb28733-7dda-4ec9-9dea-1ba794e8c4d4",
+              "name": "link",
+              "value": "={{ $('Check for interest Rules').item.json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 288],
+      "id": "4c227558-26e5-486b-b456-e01050582e14",
+      "name": "Combine information"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Fetch your rules and convert them to lowercase for safety\n// CHANGE THE NAME HERE if your config node is named something other than \"Get News Sources and Interest Rules\"\nconst rulesData = $('Get News Sources and Interest Rules').first().json;\nconst rules = (rulesData.interest_rules || []).map(r => r.toLowerCase());\n\n// 2. Loop through each article and keep only those that match\nreturn items.filter(item => {\n  const categories = item.json.categories;\n  \n  // If the article lacks a category entirely, discard it\n  if (!categories) return false;\n\n  let textToSearch = \"\";\n\n  // 3. Normalize the data: Turn EVERYTHING into a long text string regardless of its previous format\n  if (Array.isArray(categories)) {\n    textToSearch = categories.join(\" \").toLowerCase();\n  } else if (typeof categories === 'string') {\n    textToSearch = categories.toLowerCase();\n  } else {\n    // If it's an object or other weird format, stringify it\n    textToSearch = JSON.stringify(categories).toLowerCase();\n  }\n\n  // 4. THE MAGIC CHECK: Does any of the rules exist in the text?\n  // .some() returns true as soon as it finds ONE match\n  const hasMatch = rules.some(rule => textToSearch.includes(rule));\n\n  return hasMatch;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-256, 64],
+      "id": "9b5615b2-0c8a-496d-960e-b64848e687de",
+      "name": "Check for interest Rules"
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation\n",
+        "height": 432,
+        "width": 1696,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-560, -224],
+      "typeVersion": 1,
+      "id": "b2e67619-2304-47f1-b364-2312495e1cb4",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Processing\n",
+        "height": 448,
+        "width": 1696,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-560, 224],
+      "typeVersion": 1,
+      "id": "5a674a96-b9ce-4ef3-9c9d-26b5fec01b71",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Output\n\n",
+        "height": 256,
+        "width": 1696,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-560, 688],
+      "typeVersion": 1,
+      "id": "0a89b397-4322-4d90-97e1-d7ce74b84011",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.sources }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [368, -144],
+      "id": "8e4ba27c-5d54-4ed5-b74e-a732b05867cb",
+      "name": "Fetch Rss - Tech",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert tech news editor. Your task is to summarize the provided article into a concise HTML list for an email newsletter.\n\n### INSTRUCTIONS:\n\n1. **LANGUAGE DETECTION (CRITICAL):**\n   - Detect the language of the \"Article Text\" below.\n   - You MUST write the summary in the **EXACT SAME language** as the \"Article Text\".\n   - If the text is in Swedish -> Write the summary in **Swedish**.\n   - If the text is in English -> Write the summary in **English**.\n   - **DO NOT TRANSLATE.**\n\n2. **FORMATTING:**\n   - Use ONLY HTML tags: <ul> for the list, <li> for each point, and <strong> for key metrics or names.\n   - Do NOT use Markdown (no ** or *).\n   - Keep it short (max 3-4 bullet points).\n\n3. **CONTENT:**\n   - Focus on facts, technical specs, and financial figures.\n   - If the article lacks technical details, summarize the main narrative.\n   - Do not invent information not present in the text.\n\n### INPUT DATA:\n\nTitle: {{ $input.item.json.title }}\nArticle Text: {{ $input.item.json.content || $input.item.json.contentSnippet || $input.item.json.description }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [160, 288],
+      "id": "dbe9cb33-3abd-437a-9cbd-d852c6a36eee",
+      "name": "Summarize context"
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [272, 752],
+      "id": "4631087b-8573-4696-b42c-032f7064aac9",
+      "name": "Remove label - Inbox",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check news source - 24 hours": {
+      "main": [
+        [
+          {
+            "node": "Check for interest Rules",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, discards irrelevant news",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Fetch Rss - Tech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop before filtering": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get News Sources and Interest Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model (Or your LLM)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarize context",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Summarize context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get News Sources and Interest Rules": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop after filtering": {
+      "main": [
+        [
+          {
+            "node": "Aggregate all news summaries ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate all news summaries ": {
+      "main": [
+        [
+          {
+            "node": "Send mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Loop before filtering",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send mail": {
+      "main": [
+        [
+          {
+            "node": "Add label - Tech news",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine information": {
+      "main": [
+        [
+          {
+            "node": "Loop after filtering",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for interest Rules": {
+      "main": [
+        [
+          {
+            "node": "Loop after filtering",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Rss - Tech": {
+      "main": [
+        [
+          {
+            "node": "Check news source - 24 hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize context": {
+      "main": [
+        [
+          {
+            "node": "Combine information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label - Tech news": {
+      "main": [
+        [
+          {
+            "node": "Remove label - Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "be7c04ac-49ab-416a-bb0f-d5131121cdbc"
+}

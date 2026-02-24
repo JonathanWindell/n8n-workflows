@@ -1,4 +1,9 @@
 # Gmail Auto-Sorter & AI Classifier Workflow
+[![n8n](https://img.shields.io/badge/n8n-FF6D5B?logo=n8n&logoColor=white)](#)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](#)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?logo=telegram&logoColor=white)](#)
+[![Gmail](https://img.shields.io/badge/Gmail-EA4335?logo=gmail&logoColor=white)](#)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)](#)
 
 A smart, low-code n8n workflow that uses a Large Language Model (LLM) to read, categorize, and sort incoming emails automatically. It also sends high-priority notifications to Discord and Telegram.
 
@@ -14,7 +19,7 @@ This workflow triggers every time a new email arrives. It filters out expected n
 *Note: While this template uses the native Gmail trigger, you can easily swap the trigger node for a standard IMAP node to support Outlook or custom domains.*
 
 ## Architecture
-To view design of workflow press here. 
+To view design of workflow, press here. 
 - [Architecture](./Architecture.md)
 
 ## Prerequisites

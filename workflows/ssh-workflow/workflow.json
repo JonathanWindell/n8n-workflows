@@ -1,0 +1,500 @@
+{
+  "name": "Proxmox & LXC Updater Template",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "privateKey"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [112, -240],
+      "id": "c3a314ed-a181-4933-8a2a-0d370e328555",
+      "name": "SSH - Proxmox server",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://<YOUR_PROXMOX_IP_OR_DOMAIN>:8006",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-368, -224],
+      "id": "a4c8ab09-9db1-464c-803e-dfbd877fa8e3",
+      "name": "HTTP - Server live"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 1 * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-592, -224],
+      "id": "a3eb11fb-7176-4078-a404-f229ead6abda",
+      "name": "First sunday every month"
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation\n\n",
+        "height": 256,
+        "width": 1120,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-800, -272],
+      "typeVersion": 1,
+      "id": "d2621452-41f3-4787-9ea5-213a80589203",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d8c45f1d-9dcf-4c2f-8be7-a057c3bd28fb",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-128, -224],
+      "id": "a7c92af3-a6b5-4380-a6c3-f304bc4aadc6",
+      "name": "Request pass/fail"
+    },
+    {
+      "parameters": {
+        "content": "## Output\n\n",
+        "height": 560,
+        "width": 1120,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-800, 672],
+      "typeVersion": 1,
+      "id": "09bb47cb-f574-4fc3-97a1-8a3d6fddee38",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Processing\n",
+        "height": 656,
+        "width": 1120,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-800, 0],
+      "typeVersion": 1,
+      "id": "bf52b68b-a850-42ff-a42c-e19b80935300",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d8c45f1d-9dcf-4c2f-8be7-a057c3bd28fb",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-368, 64],
+      "id": "ced961fa-a4b9-4440-8cf2-491f3d69df52",
+      "name": "Server execution pass/fail"
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "pct list | grep running | awk '{print $1}'"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [-128, 48],
+      "id": "e5581852-6017-4293-a444-93fd0ae46276",
+      "name": "Execute: Get running containers",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "=pct exec {{ $json.containerId }} -- bash -c \"apt-get update && apt-get upgrade -y\""
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [-368, 288],
+      "id": "2ea0a756-8a34-4f0c-8501-bb42c1179cda",
+      "name": "Execute: Update && upgrade - container",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "command": "apt-get update && apt-get dist-upgrade -y"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [-592, 64],
+      "id": "84600452-2eec-4ace-a0d4-6234718dc96d",
+      "name": "Execute: Update && upgrade - server",
+      "credentials": {
+        "sshPrivateKey": {
+          "id": "",
+          "name": "SSH Private Key account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-592, 272],
+      "id": "3f7e4b92-346b-41d6-9a4c-12768e14eb8c",
+      "name": "Loop: Commands for containers"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gets text from SSH node. \nconst rawOutput = $input.first().json.stdout || \"\";\n\n// Split text in to list. \nconst ids = rawOutput.trim().split('\\n').filter(id => id.trim() !== \"\");\n\n// Transforms list to separate items. \nreturn ids.map(id => {\n  return {\n    json: {\n      containerId: id\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [112, 48],
+      "id": "2f605a19-de4f-4884-9db8-49ecd915084c",
+      "name": "Create: Container array"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  containerId: $node[\"Loop: Commands for containers\"].json.containerId, \n  status: ($input.first().json.code === 0) ? \"Success\" : \"Failed\",\n  errorMessage: $input.first().json.stderr || \"\"\n};\n\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-128, 288],
+      "id": "438110eb-c4a3-479b-953a-4f86c54a7402",
+      "name": "Get: Container pass/fail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all(); \n\nconst passed = [];\nconst failed = [];\n\nresults.forEach(r => {\n  const container = r.json.data[0]; \n  \n  if (container.status === \"Success\") {\n    passed.push(container.containerId);\n  } else {\n    failed.push(`${container.containerId} (Error: ${container.errorMessage})`);\n  }\n});\n\nreturn {\n  message: `**Monthly Update Done!**\\n\\n` +\n           `**Passes:** ${passed.join(\", \") || \"None\"}\\n` +\n           `**Failed:** ${failed.join(\", \") || \"None\"}`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-592, 496],
+      "id": "edbb7be5-2e15-4d0c-b87a-d97c407f1fc4",
+      "name": "Summarize: Container pass/fail"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "HTTP request failed to ping server. Server might be down",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [-592, 704],
+      "id": "c97fd760-4e3a-4b13-8615-c7b773606b09",
+      "name": "Webhook: Server not answering",
+      "webhookId": "",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Webhook: Proxmox Updates"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [-592, 1072],
+      "id": "2eb6387b-6ed6-4a11-8dd0-bd4125c9d637",
+      "name": "Webhook: Summary ",
+      "webhookId": "",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Webhook: Proxmox Updates"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Update of server failed. Command failed to update & upgrade proxmox shell. ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [-592, 880],
+      "id": "2431a78f-5e81-445a-836e-10938c4754c0",
+      "name": "Webhook: Execution server failed",
+      "webhookId": "",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "Webhook: Proxmox Updates"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [112, 288],
+      "id": "352bc6f8-30da-41b3-ad1a-fd4626f9e73f",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "content": "## Description:\nThis workflow runs the first sunday every month and updates proxmox and its containers using cmd:s Depending on result it sends summary to discord",
+        "height": 128,
+        "width": 432,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-800, -416],
+      "typeVersion": 1,
+      "id": "1df8f194-e85e-4ece-8b88-4e1ee11fb830",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "SSH - Proxmox server": {
+      "main": [
+        [
+          {
+            "node": "Execute: Update && upgrade - server",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "First sunday every month": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Server live",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Server live": {
+      "main": [
+        [
+          {
+            "node": "Request pass/fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request pass/fail": {
+      "main": [
+        [
+          {
+            "node": "SSH - Proxmox server",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Webhook: Server not answering",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Server execution pass/fail": {
+      "main": [
+        [
+          {
+            "node": "Execute: Get running containers",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Webhook: Execution server failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: Get running containers": {
+      "main": [
+        [
+          {
+            "node": "Create: Container array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: Update && upgrade - container": {
+      "main": [
+        [
+          {
+            "node": "Get: Container pass/fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: Update && upgrade - server": {
+      "main": [
+        [
+          {
+            "node": "Server execution pass/fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Commands for containers": {
+      "main": [
+        [
+          {
+            "node": "Summarize: Container pass/fail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute: Update && upgrade - container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create: Container array": {
+      "main": [
+        [
+          {
+            "node": "Loop: Commands for containers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get: Container pass/fail": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize: Container pass/fail": {
+      "main": [
+        [
+          {
+            "node": "Webhook: Summary ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Server not answering": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Loop: Commands for containers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "05d0f5ce-5a1d-49b2-81f1-981ae6adb98f"
+}
