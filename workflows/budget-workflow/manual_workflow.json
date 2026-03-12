@@ -1,0 +1,439 @@
+{
+  "name": "Manual Data Entry Template",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Input & Validation",
+        "height": 208,
+        "width": 928,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1328, -592],
+      "typeVersion": 1,
+      "id": "f0fbd1ea-4a14-4d09-9e4b-7ce90e12868a",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Processing",
+        "height": 416,
+        "width": 928,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1328, -368],
+      "typeVersion": 1,
+      "id": "8acf0af6-462e-4942-8afc-6c683a3c56b4",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Output",
+        "height": 352,
+        "width": 928,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1328, 64],
+      "typeVersion": 1,
+      "id": "56c33a95-ad61-4347-ad9a-fa1542183f0b",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "<YOUR_SPREADSHEET_ID>",
+          "mode": "list",
+          "cachedResultName": "Your Budget Spreadsheet",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "<YOUR_INPUT_SHEET_GID>",
+          "mode": "list",
+          "cachedResultName": "Manual Input Sheet",
+          "cachedResultUrl": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [1536, -544],
+      "id": "5e967a12-b6c8-438c-9f54-1d4884e508f1",
+      "name": "Manual Data Entry",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Sheets Trigger Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.frankfurter.app/latest?from=EUR&to=SEK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1536, -320],
+      "id": "6677f2b2-3def-416c-9e43-ef2b6ef614e1",
+      "name": "Get Currencies Manual"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Fetch data from specific nodes\nconst input = $(\"Manual Data Entry\").item.json;\nconst exchange = $(\"Get Currencies Manual\").item.json;\nconst rate = exchange.rates.SEK;\n\n// 2. Handle Date Formatting\nconst dateStr = input.Datum ? String(input.Datum) : \"\";\n\n// Try parsing M/d/yyyy format\nlet d = DateTime.fromFormat(dateStr, 'M/d/yyyy');\n\n// Fallback to standard d/M/yyyy if it fails\nif (!d.isValid) {\n  d = DateTime.fromFormat(dateStr, 'd/M/yyyy');\n}\n\n// Backup to current time if no date could be extracted\nif (!d.isValid) {\n  d = $now;\n}\n\n// 3. Handle Amount\nconst eur = parseFloat(input[\"Belopp (EUR)\"]) || 0;\n\n// 4. Return to Google Sheets payload\nreturn {\n  date: d.toFormat('yyyy-MM-dd'),\n  merchant: input.Butik || 'Manual Entry',\n  category: input.Kategori || 'Other',\n  amount_orig: eur,\n  currency_orig: 'EUR',\n  amount_sek: Math.round(eur * rate * 100) / 100,\n  exchange_rate: rate,\n  month: d.toFormat('yyyy-MM')\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2048, -336],
+      "id": "7142f7a4-cde9-406d-91b1-a9924b633893",
+      "name": "Compose Data Manual"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "<YOUR_SPREADSHEET_ID>",
+          "mode": "list",
+          "cachedResultName": "Your Budget Spreadsheet",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "<YOUR_BUDGET_SHEET_GID>",
+          "mode": "list",
+          "cachedResultName": "Budget Target Sheet",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Datum": "={{ $json.date }}",
+            "Butik": "={{ $json.merchant }}",
+            "Kategori": "={{ $json.category }}",
+            "Belopp (Original)": "={{ $json.amount_orig }}",
+            "Valuta": "={{ $json.currency_orig }}",
+            "Belopp (SEK)": "={{ $json.amount_sek }}",
+            "Växelkurs": "={{ $json.exchange_rate }}",
+            "Månad": "={{ $json.month }}"
+          },
+          "matchingColumns": [
+            "Datum"
+          ],
+          "schema": [
+            {
+              "id": "Datum",
+              "displayName": "Datum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Butik",
+              "displayName": "Butik",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Kategori",
+              "displayName": "Kategori",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Belopp (Original)",
+              "displayName": "Belopp (Original)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valuta",
+              "displayName": "Valuta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Belopp (SEK)",
+              "displayName": "Belopp (SEK)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Växelkurs",
+              "displayName": "Växelkurs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Månad",
+              "displayName": "Månad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1536, -128],
+      "id": "40310153-80a5-4ebd-9f88-758a3362e220",
+      "name": "Append Data Manual",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Sheets API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Receipt was successfully added and file was moved. ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [1536, 240],
+      "id": "748d2295-d28b-4dc0-b9ec-28f08a6ea1d1",
+      "name": "Passing Message Manual",
+      "webhookId": "<YOUR_WEBHOOK_ID>",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "<Your Discord Webhook Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Possible reasons for failure:\n- Could not extract data from receipt. \n- Could not fetch currencies. ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [1536, 80],
+      "id": "020b904d-96e5-4f50-820a-64a8353c57ea",
+      "name": "Failing Message Manual",
+      "webhookId": "<YOUR_WEBHOOK_ID>",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "<Your Discord Webhook Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb60acda-f0d3-4222-872a-e7c26da7273c",
+              "leftValue": "={{ $json.base }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "7901756a-af03-4da6-be5c-d8e5befac6e4",
+              "leftValue": "={{ $json.rates.SEK }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1792, -320],
+      "id": "3aeaeaa4-8118-42ac-8cba-022f452faafd",
+      "name": "Fetch Currencies - Pass/Fail Manual"
+    },
+    {
+      "parameters": {
+        "content": "## Description\nThis workflow waits the user enters data manually in google sheets file. This is used when there are receipts which can't be added to **google drive** or were payed with cash ",
+        "height": 128,
+        "width": 512,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1328, -736],
+      "typeVersion": 1,
+      "id": "defeab19-7924-4875-94cb-d963771dc84b",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "<YOUR_SPREADSHEET_ID>",
+          "mode": "list",
+          "cachedResultName": "Your Budget Spreadsheet",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "<YOUR_INPUT_SHEET_GID>",
+          "mode": "list",
+          "cachedResultName": "Manual Input Sheet",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1792, -128],
+      "id": "41a1a925-730e-4b49-9932-e053a4213864",
+      "name": "Delete Row ",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Sheets API Account>"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Data Entry": {
+      "main": [
+        [
+          {
+            "node": "Get Currencies Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Currencies Manual": {
+      "main": [
+        [
+          {
+            "node": "Fetch Currencies - Pass/Fail Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Data Manual": {
+      "main": [
+        [
+          {
+            "node": "Append Data Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Data Manual": {
+      "main": [
+        [
+          {
+            "node": "Delete Row ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Currencies - Pass/Fail Manual": {
+      "main": [
+        [
+          {
+            "node": "Compose Data Manual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failing Message Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Row ": {
+      "main": [
+        [
+          {
+            "node": "Passing Message Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "id": "",
+  "tags": []
+}

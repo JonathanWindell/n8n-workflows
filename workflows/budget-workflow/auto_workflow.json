@@ -1,0 +1,724 @@
+{
+  "name": "Auto Receipt Parsing Template",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "You are an expert data extraction AI. Analyze the attached receipt image and return the information ONLY as a valid, flat JSON object. No other text or markdown formatting outside the JSON is allowed.\n\n    Categorize the purchase into exactly ONE of the following predefined categories based on these descriptions:\n\n        Rent: Housing costs, rent notices, or fees directly related to accommodation.\n\n        Transport: Tickets for trains, buses, flights, taxis, fuel, parking, or bicycle rentals.\n\n        Groceries: Supermarkets, food stores, groceries (excluding restaurant visits).\n\n        Entertainment & Dining: Restaurant visits, cafes, bars, cinema, museums, events, and experiences.\n\n        Memberships: Subscriptions, gym memberships, software licenses, or recurring services.\n\n        Other: Anything that does not clearly fit into the above, or if the purpose of the receipt is unclear.\n\n    The JSON structure MUST look exactly like this:\n    {\n    \"category\": \"[Selected category from the list above]\",\n    \"amount\": [Numbers only, use a dot as a decimal separator],\n    \"currency\": \"[e.g., EUR or SEK]\",\n    \"merchant\": \"[Name of the store, merchant, or recipient]\",\n    \"date\": \"[YYYY-MM-DD]\"\n    }",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [240, -192],
+      "id": "039b4d0c-c1da-461c-b596-861f1cf44fcc",
+      "name": "Analyze Receipt",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "<Your Google Gemini API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation",
+        "height": 352,
+        "width": 1392,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-208, -592],
+      "typeVersion": 1,
+      "id": "2c3ee910-edb5-42a8-88ee-722936046bd2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Processing",
+        "height": 608,
+        "width": 1392,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-208, -224],
+      "typeVersion": 1,
+      "id": "38c427fa-2086-40a1-a04b-0267a16449d7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Output",
+        "height": 384,
+        "width": 1392,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-208, 400],
+      "typeVersion": 1,
+      "id": "2985edef-94cb-4e92-8157-e3b0ed96d6ae",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb60acda-f0d3-4222-872a-e7c26da7273c",
+              "leftValue": "={{ $json.base }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "7901756a-af03-4da6-be5c-d8e5befac6e4",
+              "leftValue": "={{ $json.rates.SEK }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [976, -208],
+      "id": "008b9fa7-a185-4f4c-9fa9-2967c49f403a",
+      "name": "Fetch Currencies - Pass/Fail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $(\"Analyze Receipt\").item.json;\nconst exchangeData = $(\"Get Currencies\").item.json;\n\nlet rawText = aiOutput.content.parts[0].text;\n\n// Use \\x60 to safely represent backticks in JSON templates\nconst cleanJson = rawText.replace(/\\x60\\x60\\x60json/g, \"\").replace(/\\x60\\x60\\x60/g, \"\").trim();\n\ntry {\n  const receipt = JSON.parse(cleanJson);\n  const eurToSek = exchangeData.rates.SEK;\n  \n  let finalAmountSek = receipt.amount;\n  if (receipt.currency.toUpperCase() === 'EUR') {\n    finalAmountSek = receipt.amount * eurToSek;\n  }\n\n  return {\n    date: receipt.date,\n    merchant: receipt.merchant,\n    category: receipt.category,\n    amount_orig: receipt.amount,\n    currency_orig: receipt.currency,\n    amount_sek: Math.round(finalAmountSek * 100) / 100,\n    exchange_rate: eurToSek,\n    month: DateTime.fromISO(receipt.date).toFormat('yyyy-MM')\n  };\n} catch (e) {\n  return {\n    error: \"Could not interpret JSON from AI\",\n    raw_text: cleanJson\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [32, 0],
+      "id": "f8fe2486-a791-421e-9b42-7ed3df764cd4",
+      "name": "Compose Data"
+    },
+    {
+      "parameters": {
+        "url": "https://api.frankfurter.app/latest?from=EUR&to=SEK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [752, -208],
+      "id": "5cf61d57-59ca-42fb-b13b-48a564e8f057",
+      "name": "Get Currencies"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [32, -192],
+      "id": "bd57f5d2-d330-4588-aac9-a7814f008032",
+      "name": "Wait",
+      "webhookId": ""
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Receipt was successfully added and file was moved. ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [32, 624],
+      "id": "8a18bc5e-c381-4e17-9126-d5521f10198d",
+      "name": "Passing Message",
+      "webhookId": "<YOUR_WEBHOOK_ID>",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "<Your Discord Webhook Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "Possible reasons for failure:\n- Could not extract data from receipt. \n- Could not fetch currencies. ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [32, 448],
+      "id": "a747fbd8-17b1-40d1-a773-d5080f020cf2",
+      "name": "Failing Message",
+      "webhookId": "<YOUR_WEBHOOK_ID>",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "",
+          "name": "<Your Discord Webhook Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [368, -480],
+      "id": "6ad8c057-5778-462d-9f00-be0eb57c6f22",
+      "name": "Download Receipt",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Drive API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "<YOUR_WATCH_FOLDER_ID>",
+          "mode": "list",
+          "cachedResultName": "Watch Folder Name",
+          "cachedResultUrl": ""
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [64, -560],
+      "id": "6684ddd4-88d9-4148-90e6-01f9b2d41a1b",
+      "name": "New Receipt Added",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Drive API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "<YOUR_SPREADSHEET_NAME>",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [240, 0],
+      "id": "be858ac7-dd61-459b-b414-5c2a73fe0075",
+      "name": "Search Budget Sheet",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Drive API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [752, 144],
+      "id": "c83731b3-11c9-4fc9-9616-816ebc1920b3",
+      "name": "Create Sheet for Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Sheets API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Description\nThis workflow waits until either a picture of a receipt or a file receipt is added to **Google Drive**. The workflow then analyses the receipt and and sends to google sheets.",
+        "height": 128,
+        "width": 512,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-208, -736],
+      "typeVersion": 1,
+      "id": "2cde19c8-a270-4414-981e-e44762cbf374",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb60acda-f0d3-4222-872a-e7c26da7273c",
+              "leftValue": "={{ $('Compose Data').item.json.date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [464, 0],
+      "id": "eb94b0ee-d5c0-49ab-ad29-a93e80cc8260",
+      "name": "Existing Google Sheet - Pass/Fail"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb60acda-f0d3-4222-872a-e7c26da7273c",
+              "leftValue": "={{ $json.content.parts[0].text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [464, -192],
+      "id": "73e8418f-d952-4fa5-84b4-e31cdc103b0d",
+      "name": "Readable Receipt - Pass/Fail"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $node[\"Download Receipt\"].json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "<YOUR_PROCESSED_FOLDER_ID>",
+          "mode": "list",
+          "cachedResultName": "Processed Folder Name",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [32, 176],
+      "id": "48b49b42-afef-44ac-8294-16c456ce7d46",
+      "name": "Move File to Processed",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Drive API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "<YOUR_WATCH_FOLDER_ID>",
+          "mode": "list",
+          "cachedResultName": "Watch Folder Name",
+          "cachedResultUrl": ""
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [64, -400],
+      "id": "89f8effe-e619-45df-b930-902a9a0f4921",
+      "name": "Receipt Updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Drive API Account>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "<YOUR_SPREADSHEET_ID>",
+          "mode": "list",
+          "cachedResultName": "Your Budget Spreadsheet",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "<YOUR_SHEET_GID>",
+          "mode": "list",
+          "cachedResultName": "Budget",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Datum": "={{ $('Compose Data').item.json.date }}",
+            "Butik": "={{ $('Compose Data').item.json.merchant }}",
+            "Kategori": "={{ $('Compose Data').item.json.category }}",
+            "Belopp (Original)": "={{ $('Compose Data').item.json.amount_orig }}",
+            "Valuta": "={{ $('Compose Data').item.json.currency_orig }}",
+            "Belopp (SEK)": "={{ $('Compose Data').item.json.amount_sek }}",
+            "Växelkurs": "={{ $('Compose Data').item.json.exchange_rate }}",
+            "Månad": "={{ $('Compose Data').item.json.month }}"
+          },
+          "matchingColumns": [
+            "Datum"
+          ],
+          "schema": [
+            {
+              "id": "Datum",
+              "displayName": "Datum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Butik",
+              "displayName": "Butik",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Kategori",
+              "displayName": "Kategori",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Belopp (Original)",
+              "displayName": "Belopp (Original)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valuta",
+              "displayName": "Valuta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Belopp (SEK)",
+              "displayName": "Belopp (SEK)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Växelkurs",
+              "displayName": "Växelkurs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Månad",
+              "displayName": "Månad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [752, -16],
+      "id": "58c1687a-7194-4131-9d5c-24dcb48f7ed8",
+      "name": "Append data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "<Your Google Sheets API Account>"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Analyze Receipt": {
+      "main": [
+        [
+          {
+            "node": "Readable Receipt - Pass/Fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Currencies - Pass/Fail": {
+      "main": [
+        [
+          {
+            "node": "Compose Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failing Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Data": {
+      "main": [
+        [
+          {
+            "node": "Search Budget Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Currencies": {
+      "main": [
+        [
+          {
+            "node": "Fetch Currencies - Pass/Fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Analyze Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Receipt": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Receipt Added": {
+      "main": [
+        [
+          {
+            "node": "Download Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Budget Sheet": {
+      "main": [
+        [
+          {
+            "node": "Existing Google Sheet - Pass/Fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sheet for Data": {
+      "main": [
+        [
+          {
+            "node": "Passing Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existing Google Sheet - Pass/Fail": {
+      "main": [
+        [
+          {
+            "node": "Append data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Sheet for Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Readable Receipt - Pass/Fail": {
+      "main": [
+        [
+          {
+            "node": "Get Currencies",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failing Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move File to Processed": {
+      "main": [
+        [
+          {
+            "node": "Passing Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Updated": {
+      "main": [
+        [
+          {
+            "node": "Download Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append data": {
+      "main": [
+        [
+          {
+            "node": "Move File to Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "id": "",
+  "tags": []
+}

@@ -1,8 +1,10 @@
-# Input & Validation
+# SSH Workflow
+
+## Input & Validation
 ![Input & Validation](./Images/Input%20&%20Validation.png)
 
-# Processing
+## Processing
 ![Processing](./Images/Processing.png)
 
-# Output
+## Output
 ![Output](./Images/Output.png)
