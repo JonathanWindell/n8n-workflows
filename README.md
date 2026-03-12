@@ -21,10 +21,11 @@ I'm Jonathan and I develop projects in my sparetime that help myself and others 
 
 | Name | Description | Status |
 | :--- | :--- | :--- |
-| [ Gmail Workflow](./workflows/gmail-workflow/README.md) | Automates email filtering and AI-driven categorization. Notifications through Discord & Telegram | Ready |
-| [ News Workflow](./workflows/news-workflow/README.md) | Scrapes specific sources and delivers summaries via HTML formatted mail. |  Ready |
-| [ Backup Workflow](./workflows/backup-workflow/README.md) | Automates database or file backups to github. | Ready. V2 In Progress |
-| [ SSH Workflow](./workflows/ssh-workflow/README.md) | Executes remote commands to proxmox server for updating lxc & docker containers. | Ready |
+| [ Gmail Workflow](./workflows/gmail-workflow/README.md) | Automates email filtering and AI-driven categorization. Notifications through Discord & Telegram | ![Active|88](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ News Workflow](./workflows/news-workflow/README.md) | Scrapes specific sources and delivers summaries via HTML formatted mail. |  ![Active|88](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Backup Workflow](./workflows/backup-workflow/README.md) | Automates database or file backups to github. | ![Updates|100](https://img.shields.io/badge/Status-Updates-orange?style=flat-square) V2 In Progress |
+| [ SSH Workflow](./workflows/ssh-workflow/README.md) | Executes remote commands to proxmox server for updating lxc & docker containers. | ![Active|88](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Budget Workflow](./workflows/budget-workflow/README.md) | Automates expense tracking using AI, Google Drive & Sheets | ![Active|88](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
 
 # Usage Instructions
 1. Browse to the specific workflow folder.
