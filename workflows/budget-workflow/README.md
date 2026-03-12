@@ -1,66 +1,69 @@
-# Gmail Auto-Sorter & AI Classifier Workflow
+# AI-Powered Budget & Receipt Automation
 [![n8n](https://img.shields.io/badge/n8n-FF6D5B?logo=n8n&logoColor=white)](#)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](#)
-[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?logo=telegram&logoColor=white)](#)
-[![Gmail](https://img.shields.io/badge/Gmail-EA4335?logo=gmail&logoColor=white)](#)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)](#)
+[![Google Drive](https://img.shields.io/badge/Google%20Drive-4285F4?logo=googledrive&logoColor=white)](#)
+[![Google Sheets](https://img.shields.io/badge/Google%20Sheets-34A853?logo=googlesheets&logoColor=white)](#)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](#)
 
-A smart, low-code n8n workflow that uses a Large Language Model (LLM) to read, categorize, and sort incoming emails automatically. It also sends high-priority notifications to Discord and Telegram.
+A smart, low-code system that automates your expense tracking using two distinct workflows. Whether you have a physical receipt image or a manual entry for cash purchases, this system uses **Google Gemini 2.5 Flash** for extraction and the **Frankfurter API** for real-time currency conversion (EUR to SEK).
 
 ## Highlights
-* **LLM Text Classifier:** Uses advanced prompting to reliably classify emails into 10 distinct categories (Finance, Education, Security, Transactions, etc.) based on content context.
-* **Smart Notifications:** Integrates with Discord & Telegram so you only get pinged for high-priority emails (like Security Alerts or Finance updates).
-* **Agnostic LLM:** By default, it is configured for Google Gemini, but you can swap out the LLM node for OpenAI, Anthropic, or any other supported provider in n8n.
-* **Auto-Archiving:** Automatically applies specific Gmail labels and removes emails from the Inbox to keep your main feed clean.
+* **AI-Driven OCR:** Extracts merchant names, dates, amounts, and categories from images automatically.
+* **Live Currency Sync:** Converts foreign expenses (EUR) to local currency (SEK) using the latest market rates.
+* **Automated Database Management:** Maintains a master Google Sheets budget without manual copy-pasting.
+* **Discord Notifications:** Get instant feedback on whether a receipt was successfully filed or if the AI encountered an error.
+* **Self-Cleaning:** Manual entries are moved to the master list and deleted from the input tab, while receipt images are archived in a "Processed" folder.
 
 ## Overview
-This workflow triggers every time a new email arrives. It filters out expected noise (like your own daily automated newsletters), passes the email body to an AI Text Classifier, and then routes it through a switchboard. Based on the classification, it will alert you on specific chat platforms and file the email into the correct Gmail folder.
-
-*Note: While this template uses the native Gmail trigger, you can easily swap the trigger node for a standard IMAP node to support Outlook or custom domains.*
+This system consists of two templates designed to work together:
+1.  **Auto Receipt Parsing:** For digital/physical receipts stored in Google Drive.
+2.  **Manual Data Entry:** For quick text-based entries in Google Sheets.
 
 ## Architecture
-To view design of workflow, press here. 
+To view the design and logic of the workflows, press here:
 - [Architecture](./Architecture.md)
 
 ## Prerequisites
-Before importing this workflow, ensure you have:
-1. A running **n8n instance** (Self-hosted via Docker, Desktop app, or n8n Cloud).
-2. A **Gmail Account** configured with OAuth credentials in n8n (or standard IMAP credentials).
-3. **Discord Channels** with active Webhook URLs (this workflow uses three separate webhooks for different priorities).
-4. A **Telegram Bot** token and Chat ID (for high-priority alerts).
-5. An API key for your **LLM of choice** (Gemini, OpenAI, etc.).
+1.  A running **n8n instance**.
+2.  **Google Cloud Project** with Drive and Sheets APIs enabled (OAuth2).
+3.  **Google Gemini API Key** (via Google AI Studio).
+4.  **Discord Webhook URL** for status updates.
 
-## Usage Instructions
-1. Copy the contents of `workflow.json`.
-2. Open your n8n workspace, create a new workflow, and press `CTRL + V` (or `Cmd + V`) to paste the nodes.
-3. Follow the Configuration Steps below to connect your accounts.
+---
+
+## Usage Instructions: Auto Receipt Parsing
+This workflow is designed for physical or digital receipts (images/PDFs).
+
+1.  **Upload:** Upload a photo or scan of your receipt to your designated "Watch" folder in Google Drive.
+2.  **Processing:** n8n automatically detects the new file (checks every minute).
+3.  **AI Extraction:** Google Gemini reads the image and identifies the Merchant, Date, Amount, and Category.
+4.  **Conversion:** The workflow fetches the latest EUR/SEK exchange rate and calculates the local cost.
+5.  **Completion:** Data is appended to your master Google Sheet, a Discord notification is sent, and the file is moved to your "Processed" archive folder.
+
+## Usage Instructions: Manual Data Entry
+This workflow is designed for cash purchases or expenses without a digital receipt.
+
+1.  **Input:** Open your Google Sheet and go to the **"Manual Input"** tab.
+2.  **Entry:** Enter the `Date`, `Merchant`, `Category`, and `Amount (EUR)`.
+3.  **Processing:** n8n detects the new row in the spreadsheet.
+4.  **Formatting:** The system formats the date and converts the amount from EUR to SEK using live rates.
+5.  **Cleanup:** The entry is moved to the master **"Budget"** tab, and the original row is automatically deleted from the input tab to keep it clean.
+
+---
 
 ## Configuration Steps
 
-Because this workflow interacts with your personal labels and chat IDs, you will need to map a few variables after importing:
-
 ### 1. Connect Credentials
-Double-click the following nodes and select or create your credentials:
-* **Gmail Trigger** & all **Gmail Action** nodes.
-* **Telegram** nodes.
-* **Discord** nodes.
-* **Google Gemini Chat Model** (Or delete it and attach your preferred LLM node).
+Double-click the following nodes to select or create your credentials:
+* **Google Drive/Sheets:** Select your Google OAuth2 account.
+* **Google Gemini:** Enter your API Key in the "Analyze Receipt" node.
+* **Discord:** Add your Webhook URL to the notification nodes.
 
-### 2. Update the "If" Node
-The workflow currently filters out a daily newsletter and checks against an email address. This node is only needed if you are implementing [ News Workflow](./workflows/news-workflow/README.md). 
-* Open the **"Check for daily news letter"** node.
-* Replace `<your-email@example.com>` with your actual email address.
+### 2. Map Folder & Spreadsheet IDs
+Replace the placeholders in the following nodes:
+* **Drive Triggers:** Choose the specific folder to watch.
+* **Move File:** Select your "Processed" folder ID.
+* **Google Sheets:** Select your Spreadsheet and the specific Sheet GIDs for both the "Budget" and "Manual Input" tabs.
 
-### 3. Customize AI Prompt Categories
-* Open the **"Mail - Text Classifier"** node.
-* Review the descriptions for `Education`, `Finance & Bills`, and `Transactional`. Update the placeholders (like `<Your University Name>` or `<Your Bank>`) with the specific institutions relevant to your life to improve the AI's accuracy.
-
-### 4. Re-map Gmail Labels
-Because Gmail label IDs are unique to every Google account, the imported nodes will show an error until you select your own labels.
-* Open each **"Add: [Category]"** Gmail node.
-* Under the `Label IDs` field, clear the `<YOUR_LABEL_ID_HERE>` text.
-* Use the dropdown menu to select the corresponding label from your own Gmail account.
-
-### 5. Set Telegram Chat IDs
-* Open the two **Telegram** nodes.
-* Replace `<YOUR_TELEGRAM_CHAT_ID>` with your personal Chat ID.
+### 3. Customize AI Categories
+Open the **"Analyze Receipt"** node to edit the predefined categories (Groceries, Rent, Entertainment, etc.) in the prompt to match your specific budget structure.
