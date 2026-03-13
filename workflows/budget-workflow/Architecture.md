@@ -17,5 +17,5 @@
 ## Processing
 ![Processing](./Images/Processing%20-%20Manual.png)
 
-## Output - Auto
+## Output
 ![Output](./Images/Output%20-%20Manual.png)
