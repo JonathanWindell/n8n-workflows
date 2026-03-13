@@ -3,7 +3,7 @@
 ## Input & Validation 
 ![Input & Validation](./Images/Input%20&%20Validation%20-%20Auto.png)
 
-## Processing - Auto 
+## Processing
 ![Processing](./Images/Processing%20-%20Auto.png)
 
 ## Output 
@@ -14,8 +14,8 @@
 ## Input & Validation 
 ![Input & Validation](./Images/Input%20&%20Validation%20-%20Manual.png)
 
-## Processing - Auto 
+## Processing
 ![Processing](./Images/Processing%20-%20Manual.png)
 
 ## Output - Auto
-![Output](./Images/Processing%20-%20Manual.png)
+![Output](./Images/Output%20-%20Manual.png)
