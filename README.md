@@ -26,7 +26,7 @@ I'm Jonathan and I develop projects in my sparetime that help myself and others 
 | [ Backup Workflow](./workflows/backup-workflow/README.md) | Automates database or file backups to github. | ![Updates](https://img.shields.io/badge/Status-Updates-orange?style=flat-square) - *V2 In Progress* |
 | [ SSH Workflow](./workflows/ssh-workflow/README.md) | Executes remote commands to proxmox server for updating lxc & docker containers. | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
 | [ Budget Workflow](./workflows/budget-workflow/README.md) | Automates expense tracking using AI, Google Drive & Sheets | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
-| *Job Hunting Workflow (Coming Soon)* | Fetch job postings based on choosen keywords. Manipulate CV & Cover letter |  |
+| *Job Hunting Workflow (Coming Soon)* | Fetch job postings based on choosen keywords. Manipulate CV & Cover letter | ![Status](https://img.shields.io/badge/Status-Upcoming-lightgrey?style=flat-square) |
 
 # Usage Instructions
 1. Browse to the specific workflow folder.
