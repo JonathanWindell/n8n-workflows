@@ -1,24 +1,31 @@
 ```mermaid
 flowchart TD
-    %% Start och Datainsamling
-    Id1(Scheduled Trigger: <br> 06:00 Every Day) --> Id2(Code Node)
+    %% Start och Discovery
+    Start(Trigger: 08:00) --> Config(Config: Google Sheets <br>Keywords & Sites)
+    Config --> Scrape(HTTP Request: <br>Scrape Job Sites)
+    Scrape --> Filter(Filter: <br>Interesting Jobs)
 
-    Id2(Code Node: <br> Get Key Search Words <br> Get Job Sites) --> Id3(HTTP Request) 
-
-    Id3(HTTP Request: <br> Search Job Sites) --> Id4{If Node: <br> Job Posting >= 24 Hours}
-
-    Id4{If Node: <br> Job Posting >= 24 Hours} --> Id5(Keep)
-
-    Id4{If Node: <br> Job Posting >= 24 Hours} --> Id6(Disregard)
-
-    Id5(Keep) --> Id7(Filter Data)
-
-    Id7(Filter Data: <br> Job Description, <br> Company, <br> Location, <br> Occupancy Rate) 
-    --> Id8(HTTP Request: <br> Search Company)
-
-    Id8(HTTP Request: <br> Search Company) --> Id9(Filter Data: : <br> Field, <br> Company Motto, <br> Description)
+    %% Human in the Loop (HITL)
+    Filter --> HITL{Human Approval}
     
+    %% Kontext-insamling (Körs parallellt efter Ja)
+    HITL -- Yes --> FetchCV(Google Drive: <br>Fetch Base CV & CL)
+    HITL -- Yes --> FetchGitHub(HTTP Request: <br>GitHub Repo/READMEs)
+    HITL -- Yes --> FetchBlog(HTTP Request: <br>Medium/Hashnode RSS)
 
-
+    %% AI Processen med Rate Limit skydd
+    FetchCV --> AI_Agent(AI Agent: <br>LangChain + Memory)
+    FetchGitHub --> AI_Agent
+    FetchBlog --> AI_Agent
+    
+    AI_Agent --> Wait1(Wait: 30s)
+    
+    Wait1 --> Logic(AI: Match Projects <br>to Job Requirements)
+    Logic --> Wait2(Wait: 30s)
+    
+    Wait2 --> Generate(AI: Generate Tailored <br>CV & Cover Letter)
+    
+    Generate --> Review(Human In the Loop: <br>Final Review)
+    Review --> Save(Save to Google Drive: <br>Folder 'Applications')
 
 ```
