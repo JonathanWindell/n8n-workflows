@@ -66,4 +66,4 @@ Replace the placeholders in the following nodes:
 * **Google Sheets:** Select your Spreadsheet and the specific Sheet GIDs for both the "Budget" and "Manual Input" tabs.
 
 ### 3. Customize AI Categories
-Open the **"Analyze Receipt"** node to edit the predefined categories (Groceries, Rent, Entertainment, etc.) in the prompt to match your specific budget structure.
+Open the **"Analyze Receipt"** node to edit the predefined categories (Groceries, Rent, Entertainment, etc.) in the prompt to match your specific budget structure. Do not forget to also implement this as a table etc in **Google Sheets** for easier management of expenses. 
