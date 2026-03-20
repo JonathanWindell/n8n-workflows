@@ -1,31 +1,33 @@
 ```mermaid
 flowchart TD
     %% Start och Discovery
-    Start(Trigger: 08:00) --> Config(Config: Google Sheets <br>Keywords & Sites)
-    Config --> Scrape(HTTP Request: <br>Scrape Job Sites)
-    Scrape --> Filter(Filter: <br>Interesting Jobs)
-
-    %% Human in the Loop (HITL)
+    Start(Trigger: 08:00) --> Config(Config: Google Sheets)
+    Config --> Scrape(HTTP Request: Scrape)
+    
+    %% Felhantering på Scrape
+    Scrape -- Error --> ErrorHandler(Error Trigger: <br>Notify via Discord)
+    
+    Scrape --> Filter(Filter: Interesting Jobs)
     Filter --> HITL{Human Approval}
     
-    %% Kontext-insamling (Körs parallellt efter Ja)
-    HITL -- Yes --> FetchCV(Google Drive: <br>Fetch Base CV & CL)
-    HITL -- Yes --> FetchGitHub(HTTP Request: <br>GitHub Repo/READMEs)
-    HITL -- Yes --> FetchBlog(HTTP Request: <br>Medium/Hashnode RSS)
-
-    %% AI Processen med Rate Limit skydd
-    FetchCV --> AI_Agent(AI Agent: <br>LangChain + Memory)
-    FetchGitHub --> AI_Agent
-    FetchBlog --> AI_Agent
+    %% Kontext med 'Continue on Fail'
+    HITL -- Yes --> FetchCV(Google Drive: Base CV)
+    HITL -- Yes --> FetchGitHub(GitHub API)
+    HITL -- Yes --> FetchBlog(Blog RSS)
     
-    AI_Agent --> Wait1(Wait: 30s)
+    %% AI Processen
+    FetchCV & FetchGitHub & FetchBlog --> AI_Agent(AI Agent)
     
-    Wait1 --> Logic(AI: Match Projects <br>to Job Requirements)
-    Logic --> Wait2(Wait: 30s)
+    AI_Agent --> Wait1(Wait: 30s) --> Logic(AI: Match)
+    Logic --> Wait2(Wait: 30s) --> Generate(AI: Generate)
     
-    Wait2 --> Generate(AI: Generate Tailored <br>CV & Cover Letter)
+    %% Slutförande
+    Generate --> Review(Final Review)
+    Review --> Save(Save to Google Drive)
     
-    Generate --> Review(Human In the Loop: <br>Final Review)
-    Review --> Save(Save to Google Drive: <br>Folder 'Applications')
+    %% Global felhanterare (n8n feature)
+    subgraph Error_Safety_Net
+    ErrorNode(Error Trigger Node) --> NotifyUser(Send Notification)
+    end
 
 ```
