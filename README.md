@@ -5,7 +5,6 @@
 
 - **Ready to Import:** Fully functional JSON templates. Just connect your credentials and go.
 - **Low-Code Flexibility:** Built entirely in n8n, making them easy to tweak for your specific needs.
-- **Developer-Centric:** Focuses on efficiency, SSH management, and automated backups.
 
 # Overview
 
