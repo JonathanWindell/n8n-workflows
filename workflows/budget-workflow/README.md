@@ -20,8 +20,13 @@ This system consists of two templates designed to work together:
 2.  **Manual Data Entry:** For quick text-based entries in Google Sheets.
 
 ## Architecture
+
+### Auto Workflow
 To view the design and logic of the workflows, press here:
-- [Architecture](./Architecture.md)
+- [Auto Workflow](./auto-workflow/architecture.md)
+
+### Manual Workflow
+- [Manual Workflow](./manual-workflow/architecture.md)
 
 ## Prerequisites
 1.  A running **n8n instance**.
