@@ -1,0 +1,1101 @@
+{
+  "name": "Adzuna Job Searcher - Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -336,
+        176
+      ],
+      "id": "727926a5-94e5-49f7-b0e8-83863de91851",
+      "name": "Loop ISO Letter Codes"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.adzuna.com/v1/api/jobs/{{ $json.col_2.toLowerCase() }}/search/1?app_id=0e0f6675&app_key=f5a671d163c305ced0eab2403d1b5109",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        128,
+        192
+      ],
+      "id": "43be86d3-930b-40c6-9cbb-9e5310f0cd6d",
+      "name": "HTTP Request Adzuna",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.first().json.results || [];\n\nreturn results.map(job => {\n  return {\n    json: {\n      title: job.title,\n      company: job.company?.display_name || \"Okänt företag\",\n      location: job.location?.display_name || \"Remote\",\n      url: job.redirect_url,\n      description: job.description,\n      source: \"Adzuna\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -32
+      ],
+      "id": "f42724a5-2520-4d7b-b8c8-9e455f9de24a",
+      "name": "Normalise Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c9571462-fc43-497f-aa36-ee8d17f620e6",
+              "leftValue": "={{ $json.col_2 }}",
+              "rightValue": "Country_Code",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        -32
+      ],
+      "id": "443bca2c-f1fa-47e6-ada5-67ac84ce56ff",
+      "name": "Filter Country Code"
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        768,
+        -816
+      ],
+      "id": "7589d34a-5e8c-4b02-91f7-8eb956380f6e",
+      "name": "Merge Google Sheets"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 986099204,
+          "mode": "list",
+          "cachedResultName": "Filter_Place_of_Work",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=986099204"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -576
+      ],
+      "id": "7eaf2a3b-44af-4f26-8e80-1fffa0f40e74",
+      "name": "Get Place of Work",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1286073168,
+          "mode": "list",
+          "cachedResultName": "Filter_Roles",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=1286073168"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -416
+      ],
+      "id": "e22b6f1d-7698-48b2-b404-d47bf41b4cd9",
+      "name": "Get Roles",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 484812590,
+          "mode": "list",
+          "cachedResultName": "Filter_Time",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=484812590"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -736
+      ],
+      "id": "8af0839b-66c2-445a-9ee9-1b903c7576d3",
+      "name": "Get Time",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Filter_Skills",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -896
+      ],
+      "id": "dc6915f0-fcce-40c3-869b-628af89d5b6c",
+      "name": "Get Skills",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Roles_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -416
+      ],
+      "id": "eb81545a-392c-4225-811a-8aa911f6a09e",
+      "name": "Aggregate Roles"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "PlaceofWork_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -576
+      ],
+      "id": "a7843e22-7be8-4b77-ab22-86ad87888a16",
+      "name": "Aggregate Place of Work"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Time_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -736
+      ],
+      "id": "e7386ec5-b5a3-45c5-a117-f37e83b3e31d",
+      "name": "Aggregate Time"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Skills_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -896
+      ],
+      "id": "8ad1005e-5857-401a-a7a1-2364a25f1384",
+      "name": "Aggregate Skills"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 600336945,
+          "mode": "list",
+          "cachedResultName": "Log_Found_Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=600336945"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -1056
+      ],
+      "id": "3a841b8d-69e6-46b6-8141-14bfcebe95c7",
+      "name": "Get Logged Jobs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Logged_Jobs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -1056
+      ],
+      "id": "b7c24dcd-1b8b-42e5-a16a-53e7f7e0dc7c",
+      "name": "Aggregate Logged Jobs"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2033660600,
+          "mode": "list",
+          "cachedResultName": "Adzuna_Job_URL:s",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=2033660600"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -256
+      ],
+      "id": "ffea37a0-10bd-470d-bb85-7c4741a589f5",
+      "name": "Get Country Codes",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -752
+      ],
+      "id": "dd9e4370-b135-42d7-b7a8-da03dcba8348",
+      "name": "All Data is Now Available"
+    },
+    {
+      "parameters": {
+        "jsCode": "const groupLocation = $('Aggregate Place of Work').first().json.PlaceofWork_Keywords.map(i => String(i[\"Location\"] || \"\").toLowerCase().trim());\nconst groupTime = $('Aggregate Time').first().json.Time_Keywords.map(i => String(i[\"Time\"] || \"\").toLowerCase().trim());\nconst groupRoles = $('Aggregate Roles').first().json.Roles_Keywords.map(i => String(i[\"Roles\"] || \"\").toLowerCase().trim());\nconst groupSkills = $('Aggregate Skills').first().json.Skills_Keywords.map(i => String(i[\"Skill Keywords\"] || \"\").toLowerCase().trim());\n\n// De-duplicate\nconst loggedJobsData = $('Aggregate Logged Jobs').first().json.Logged_Jobs || [];\nconst loggedUrls = loggedJobsData.map(j => String(j[\"Found Jobs\"] || \"\").trim());\n\n// Filter jobs\nconst matchedJobs = $input.all().filter(item => {\n  const job = item.json;\n  const currentUrl = (job.url || job.application_url || \"\").trim();\n  \n  if (loggedUrls.includes(currentUrl)) return false;\n\n  const content = `${job.title || job.position || \"\"} ${job.description || \"\"} ${job.location || \"\"}`.toLowerCase();\n\n  const hasLocation = groupLocation.some(w => w !== \"\" && content.includes(w));\n  const hasTime = groupTime.some(w => w !== \"\" && content.includes(w));\n\n  if (hasLocation && hasTime) {\n    let score = 0;\n    groupRoles.forEach(w => { if (w !== \"\" && content.includes(w)) score += 10; });\n    groupSkills.forEach(w => { if (w !== \"\" && content.includes(w)) score += 5; });\n    \n    item.json.match_score = score;\n    return true;\n  }\n  return false;\n});\n\n// Return object even if empty\nreturn {\n  jobs: matchedJobs.map(j => j.json),\n  total_found: matchedJobs.length,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -32
+      ],
+      "id": "fb30993a-d208-4d3b-919b-8c95183f3a29",
+      "name": "Validate Against Keywords",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "text": "=Role: You are a Senior Job Market Analyst and Data Extraction Specialist. Your expertise lies in parsing unstructured job descriptions and identifying key logistical details with 100% accuracy.\n\nObjective: Analyze the provided job posting text. Validate if it is a genuine professional opportunity and extract specific metadata into a structured JSON format.\n\nCore Skills & Guidelines:\n\n    Inference Expert: If hours aren't explicitly stated but the term \"Werkstudent\" is used, infer \"Max 20 hours/week\". If \"Full-time\" is mentioned, state \"40 hours/week\".\n\n    Multilingual Summarization: If the job is in Swedish or German, translate the short_summary and key_tasks into Swedish (or English, your choice).\n\n    Geographical Guard: Identify \"Digital Nomad\" compatibility. Specifically look for mentions of \"must reside in [Country]\" vs \"Anywhere in [Region]\".\n\n    Conciseness: Keep descriptions punchy and focused on the actual work, not corporate fluff.\n\nValidation Rule: If the input text is not a job posting or is missing critical info, fill fields with \"Not specified\".\n\nThese are the sources of information. \n\nJob Data to Analyze:\n- Company: {{ $json.company }}\n- Position: {{ $json.position }}\n- Location/Base: {{ $json.location }}\n- Salary Range: {{ $json.salary_min }} - {{ $json.salary_max }}\n- Original Tags: {{ $json.tags }}\n- Pre-match Score: {{ $json.match_score }}\n- Direct URL: {{ $json.url }}\n\nFull Description:\n{{ $json.description }}\n",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"job_title\": \"Position name\",\n  \"company_name\": \"Company name\",\n  \"summary_sv\": \"En sammanfattning på svenska av rollen och företaget.\",\n  \"work_hours\": \"e.g. 20h, 40h or Not specified\",\n  \"location_type\": \"Remote / Hybrid / On-site\",\n  \"geographical_requirements\": \"e.g. Europe only, Sweden only, Global\",\n  \"nomad_score\": 8,\n  \"salary_info\": \"e.g. €20/h or Not specified\",\n  \"key_skills\": [\"Python\", \"n8n\", \"Support\"],\n  \"application_url\": \"{{ $json.url }}\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        192
+      ],
+      "id": "80d1bafd-917d-4cf0-921b-827d4430d5d7",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        704,
+        384
+      ],
+      "id": "9994500d-94da-4141-9999-6a6bf8984ad3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "n03Ta88uz8e6Inuv",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -64
+      ],
+      "id": "329c1af8-13ad-41c4-988c-8b12d1b2887e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "sendTo": "windelljonathan04@gmail.com",
+        "subject": "=Daily Job Search from Adzuna\n",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; color: #333; margin: 0; padding: 20px; }\n  .container { max-width: 600px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }\n  .header { background: #ff5a5f; color: white; padding: 30px 20px; text-align: center; } /* Adzuna-inspirerad röd/orange färg */\n  .header h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }\n  .job-card { padding: 25px; border-bottom: 1px solid #edf2f7; position: relative; }\n  .job-card:last-child { border-bottom: none; }\n  .nomad-badge { background: #fff8e1; color: #b45309; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; float: right; border: 1px solid #fef3c7; }\n  .title { font-size: 19px; margin: 0 0 5px 0; color: #ff5a5f; font-weight: 700; line-height: 1.2; }\n  .company { color: #64748b; font-size: 15px; font-weight: 500; margin-bottom: 15px; display: block; }\n  .stats-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }\n  .stat-pill { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }\n  .summary { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; }\n  .skill-container { margin-bottom: 20px; }\n  .skill-tag { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 0 4px 4px 0; font-weight: 500; }\n  .btn { display: block; text-align: center; background: #ff5a5f; color: white !important; padding: 12px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; transition: background 0.2s; }\n  .footer { padding: 20px; font-size: 12px; color: #94a3b8; text-align: center; background: #f8fafc; }\n</style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>Adzuna Jobb-brief</h1>\n      <p style=\"margin: 5px 0 0 0; opacity: 0.9;\">Nya matchningar från Adzuna-flödet</p>\n    </div>\n\n    {{ $json.data.map(item => {\n      const job = item.output;\n      return `\n      <div class=\"job-card\">\n        <span class=\"nomad-badge\">Nomad Score: ${job.nomad_score}/10</span>\n        <div class=\"title\">${job.job_title}</div>\n        <span class=\"company\">${job.company_name}</span>\n\n        <div class=\"stats-grid\">\n          <span class=\"stat-pill\"> ${job.work_hours}</span>\n          <span class=\"stat-pill\"> ${job.location_type}</span>\n          <span class=\"stat-pill\"> ${job.salary_info}</span>\n        </div>\n\n        <div class=\"summary\">\n          <strong>Kort sammanfattning:</strong><br>\n          ${job.summary_sv}\n        </div>\n\n        <div class=\"skill-container\">\n          ${job.key_skills ? job.key_skills.map(skill => `<span class=\"skill-tag\">${skill}</span>`).join('') : ''}\n        </div>\n\n        <div style=\"font-size: 12px; color: #64748b; margin-bottom: 10px;\">\n           Krav: ${job.geographical_requirements}\n        </div>\n\n        <a href=\"${job.application_url}\" class=\"btn\">Visa annons på Adzuna</a>\n      </div>\n      `;\n    }).join('') }}\n\n    <div class=\"footer\">\n      Detta är en automatiserad brief baserad på dina sökord.<br>\n      Status har satts till <strong>\"Not Applied\"</strong> i loggen.\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        592
+      ],
+      "id": "608417ce-5dc6-41b1-bb1a-71a38cbd1d14",
+      "name": "Send a message",
+      "webhookId": "38648ca8-bd1a-413e-87f4-97357f4ba31b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XjnFvcNGBFObjapz",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        192
+      ],
+      "id": "4084e7cb-675d-4cbe-9177-0b37f7c6addd",
+      "name": "Wait",
+      "webhookId": "6f1e0262-33f5-4ab0-b19b-daa2851bbc57"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        704,
+        -48
+      ],
+      "id": "e90d3b76-d947-4a92-a4e0-b0625b72f5c3",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation",
+        "height": 992,
+        "width": 1568,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -1088
+      ],
+      "typeVersion": 1,
+      "id": "8cd9bcf7-12f0-4300-b9c1-2400b8ce677d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 600336945,
+          "mode": "list",
+          "cachedResultName": "Log_Found_Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-kxcgkNcPMTs2HNAmVzBrYNKTXP7n8WarWpQn-cuG8/edit#gid=600336945"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job_URL": "={{ $json.url }}",
+            "Date_Found": "={{ $now }}",
+            "Status": "Not Applied"
+          },
+          "matchingColumns": [
+            "Found Jobs"
+          ],
+          "schema": [
+            {
+              "id": "Job_URL",
+              "displayName": "Job_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date_Found",
+              "displayName": "Date_Found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -48,
+        624
+      ],
+      "id": "702998cc-1620-4bb0-b318-190000ab5f24",
+      "name": "Append Job To Found Jobs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "79BN05f0OUvj7C36",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -336,
+        608
+      ],
+      "id": "fdf6825f-5223-4a33-8ebb-24dfee028b73",
+      "name": "Loop Over Logging Jobs"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        416,
+        144
+      ],
+      "id": "fb121b2f-9096-43cc-997b-057819d920e1",
+      "name": "No Job Postings Matching Keywords"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "561e41a3-82d8-45cc-9c1b-c8e18b2040de",
+              "leftValue": "={{ $json.total_found }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -32
+      ],
+      "id": "2fb6307f-c466-4f86-961c-982f89a6298b",
+      "name": "Matching Job Postings - Yes/No"
+    },
+    {
+      "parameters": {
+        "content": "## Processing",
+        "height": 608,
+        "width": 1568,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "1a74da28-fcfb-4c94-a4cd-7495081d8761",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Output",
+        "height": 272,
+        "width": 1568,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "68baca69-fae4-47be-9334-80ba9eb0c670",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Description:\nThis workflow uses the adzuna API to search for jobs based on criteria choosen by the user from **Google Sheets** which work as a relational database",
+        "height": 128,
+        "width": 448,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -1232
+      ],
+      "typeVersion": 1,
+      "id": "a749890b-c348-44f9-8762-05720200652a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Job Searcher - Adzuna"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        -656
+      ],
+      "id": "c611e233-6e22-44a5-b8e7-dbe43b09a86f",
+      "name": "When Executed by Job Master Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_8148696352501173995"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        592
+      ],
+      "id": "884b6cf3-eb07-4b60-9871-33d23f005016",
+      "name": "Add Label to Mail",
+      "webhookId": "3da0b6f0-dcd2-49f8-b4b5-ca2d4f21ba66",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XjnFvcNGBFObjapz",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop ISO Letter Codes": {
+      "main": [
+        [
+          {
+            "node": "Normalise Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalise Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Against Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Country Code": {
+      "main": [
+        [
+          {
+            "node": "Loop ISO Letter Codes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Adzuna": {
+      "main": [
+        [
+          {
+            "node": "Loop ISO Letter Codes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "All Data is Now Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Place of Work": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Place of Work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Roles": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Roles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Time": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Skills": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Skills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Roles": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Aggregate Place of Work": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Aggregate Time": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Aggregate Skills": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get Logged Jobs": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Logged Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Logged Jobs": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Country Codes": {
+      "main": [
+        [
+          {
+            "node": "Filter Country Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Against Keywords": {
+      "main": [
+        [
+          {
+            "node": "Matching Job Postings - Yes/No",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Add Label to Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Logging Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Adzuna",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Job To Found Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Logging Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Logging Jobs": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Append Job To Found Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Matching Job Postings - Yes/No": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "No Job Postings Matching Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Job Master Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Logged Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Skills",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Time",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Place of Work",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Roles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Country Codes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a6ffb72d-df98-4009-83c4-bf75990af69f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55bd2fce4552f94dfb7222647d9ecd849c536ed6b324a62e1a7e414fb2fb30a6"
+  },
+  "id": "CE_SWmpNcC5Qdt-bKrZT0",
+  "tags": []
+}

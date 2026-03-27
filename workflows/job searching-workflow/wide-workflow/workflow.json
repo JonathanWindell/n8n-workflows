@@ -1,0 +1,1113 @@
+{
+  "name": "Job Searcher - Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        624
+      ],
+      "id": "050aeeb3-3559-49f6-b81a-51345aecbfb4",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        848
+      ],
+      "id": "d57a19d7-e9e3-48f9-ae78-c91f6757d2e1",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Get Job URL:s ').item.json['Job URL:s'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        192
+      ],
+      "id": "0ba288ac-5d75-4e5a-be6c-ede2740b0912",
+      "name": "HTTP Request JobTechDev"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Get Job URL:s ').item.json['Job URL:s'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        16
+      ],
+      "id": "1dcc637e-f9e2-4d6a-bd0f-6c14a1ec3891",
+      "name": "HTTP Request RemoteOk"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Get Job URL:s ').item.json['Job URL:s'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        352
+      ],
+      "id": "597c14e2-60b3-4402-83a7-f497997fef8e",
+      "name": "HTTP Request Himalayas"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Job_URL:s"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -816
+      ],
+      "id": "ff180084-2788-4cde-9055-29488ec30b52",
+      "name": "Get Job URL:s "
+    },
+    {
+      "parameters": {
+        "jsCode": "const skillsList = $('Aggregate Skills').first().json.Skills_Keywords.map(i => String(i[\"Skill Keywords\"] || \"\").toLowerCase().trim());\nconst timeList = $('Aggregate Time').first().json.Time_Keywords.map(i => String(i[\"Time\"] || \"\").toLowerCase().trim());\nconst placeList = $('Aggregate Place of Work').first().json.PlaceofWork_Keywords.map(i => String(i[\"Remote\"] || \"\").toLowerCase().trim());\nconst rolesList = $('Aggregate Roles').first().json.Roles_Keywords.map(i => String(i[\"Roles\"] || \"\").toLowerCase().trim());\n\nconst loggedJobsData = $('Aggregate Logged Jobs').first().json.Logged_Jobs || [];\nconst loggedUrls = loggedJobsData.map(j => String(j[\"Found Jobs\"] || \"\").trim());\n\nreturn $input.all().filter(item => {\n  const job = item.json;\n\n  const currentUrl = (job.url || job.application_url || \"\").trim();\n  if (loggedUrls.includes(currentUrl)) {\n    return false;\n  }\n\n  const content = (\n    (job.position || job.title || \"\") + \" \" + \n    (job.description || \"\") + \" \" + \n    (job.tags ? job.tags.join(\" \") : \"\")\n  ).toLowerCase();\n\n  const isRemote = placeList.some(word => word !== \"\" && content.includes(word));\n  const isPartTime = timeList.some(word => word !== \"\" && content.includes(word));\n\n  // This you have to change if not correct search words. \n  if (isRemote && isPartTime) {\n    let score = 0;\n    \n    rolesList.forEach(word => { if (word !== \"\" && content.includes(word)) score += 10; });\n    skillsList.forEach(word => { if (word !== \"\" && content.includes(word)) score += 5; });\n\n    item.json.match_score = score;\n    return true; \n  }\n\n  return false; \n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        192
+      ],
+      "id": "be824fa5-3787-43e9-8588-e9ed33db7ee0",
+      "name": "Validate Against Keywords",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        -832
+      ],
+      "id": "bb1ca9a3-b082-471e-b744-932856014de6",
+      "name": "Merge Google Sheets"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=['Job URL:s'] ",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -192
+      ],
+      "id": "8cc8fd06-1003-401c-8350-08d2542495f9",
+      "name": "Split Out Job URL:s"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['[\\'Job URL:s\\']'] }}",
+                    "rightValue": "remoteok",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "35044c6e-80eb-416a-8914-6505f4898304"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a730d3a7-a964-43cd-b1bc-050bfba704f4",
+                    "leftValue": "={{ $json['[\\'Job URL:s\\']'] }}",
+                    "rightValue": "jobtech",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2188b64c-5ff8-4aa1-9b53-2970f9323861",
+                    "leftValue": "={{ $json['[\\'Job URL:s\\']'] }}",
+                    "rightValue": "himalayas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        176
+      ],
+      "id": "83af3efa-b2de-43e6-977e-822b1a8c28d1",
+      "name": "Switch Contains Job URL:s"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        384,
+        176
+      ],
+      "id": "a573bfb3-ec47-4578-9b59-0ba40393f44c",
+      "name": "Merge Found Jobs"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Filter_Place_of_Work"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -336
+      ],
+      "id": "5dec6cd3-5e46-439c-83d0-beb961cd1d06",
+      "name": "Get Place of Work"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Filter_Roles"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -176
+      ],
+      "id": "68c2366c-dabe-4efd-b4b4-5a7bb26799d6",
+      "name": "Get Roles"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Filter_Time"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -496
+      ],
+      "id": "de59e2d2-6bf6-4542-ae20-e9f5d8877bb3",
+      "name": "Get Time"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Filter_Skills"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -656
+      ],
+      "id": "cbfaf45c-dfa4-41ac-a481-222f34589312",
+      "name": "Get Skills"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Roles_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -176
+      ],
+      "id": "f581d34f-285b-400b-a9e4-bab3ffdeee1a",
+      "name": "Aggregate Roles"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "PlaceofWork_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -336
+      ],
+      "id": "54f62aed-6b30-4ec4-9bb5-1d10c9ccd82c",
+      "name": "Aggregate Place of Work"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Time_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -496
+      ],
+      "id": "bdfdb6ed-d1ca-4848-a221-5df83609634d",
+      "name": "Aggregate Time"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Skills_Keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -656
+      ],
+      "id": "622a5d25-76ba-494a-8438-4a60b882114b",
+      "name": "Aggregate Skills"
+    },
+    {
+      "parameters": {
+        "content": "## Input & Validation ",
+        "height": 992,
+        "width": 1264,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -1008
+      ],
+      "typeVersion": 1,
+      "id": "4713c999-d957-4252-aac4-1adb1011dd34",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Log_Found_Jobs"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -976
+      ],
+      "id": "d1aa9ff0-d9bf-4a6b-85ab-84fb9db21280",
+      "name": "Get Logged Jobs"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "n8n - Job Hunting"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Log_Found_Jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job_URL": "={{ $json.url }}",
+            "Date_Found": "={{ $now }}",
+            "Status": "Not Applied"
+          },
+          "matchingColumns": [
+            "Found Jobs"
+          ],
+          "schema": [
+            {
+              "id": "Job_URL",
+              "displayName": "Job_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date_Found",
+              "displayName": "Date_Found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        1088
+      ],
+      "id": "de44ecfe-c818-43dc-a8d0-83d163583aae",
+      "name": "Append Job To Found Jobs"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Logged_Jobs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -976
+      ],
+      "id": "d17b8ff4-6154-44d8-b1f2-59849d0cb977",
+      "name": "Aggregate Logged Jobs"
+    },
+    {
+      "parameters": {
+        "content": "## Processing",
+        "height": 992,
+        "width": 1264,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "ccdfd89a-04e4-44fb-8f2e-143615114eaa",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        384,
+        624
+      ],
+      "id": "cfe393e0-014a-49a9-9b67-8654a74e8245",
+      "name": "Loop Over Job Postings"
+    },
+    {
+      "parameters": {
+        "text": "=Role: You are a Senior Job Market Analyst and Data Extraction Specialist. Your expertise lies in parsing unstructured job descriptions and identifying key logistical details with 100% accuracy.\n\nObjective: Analyze the provided job posting text. Validate if it is a genuine professional opportunity and extract specific metadata into a structured JSON format.\n\nCore Skills & Guidelines:\n\n  Inference Expert: If hours aren't explicitly stated but the term \"Werkstudent\" is used, infer \"Max 20 hours/week\". If \"Full-time\" is mentioned, state \"40 hours/week\".\n\n  Multilingual Summarization: If the job is in Swedish or German, translate the short_summary and key_tasks into Swedish (or English, your choice).\n\n  Geographical Guard: Identify \"Digital Nomad\" compatibility. Specifically look for mentions of \"must reside in [Country]\" vs \"Anywhere in [Region]\".\n\n  Conciseness: Keep descriptions punchy and focused on the actual work, not corporate fluff.\n\nValidation Rule: If the input text is not a job posting or is missing critical info, fill fields with \"Not specified\".\n\nThese are the sources of information. \n\nJob Data to Analyze:\n- Company: {{ $json.company }}\n- Position: {{ $json.position }}\n- Location/Base: {{ $json.location }}\n- Salary Range: {{ $json.salary_min }} - {{ $json.salary_max }}\n- Original Tags: {{ $json.tags }}\n- Pre-match Score: {{ $json.match_score }}\n- Direct URL: {{ $json.url }}\n\nFull Description:\n{{ $json.description }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"job_title\": \"Position name\",\n  \"company_name\": \"Company name\",\n  \"summary_sv\": \"En sammanfattning på svenska av rollen och företaget.\",\n  \"work_hours\": \"e.g. 20h, 40h or Not specified\",\n  \"location_type\": \"Remote / Hybrid / On-site\",\n  \"geographical_requirements\": \"e.g. Europe only, Sweden only, Global\",\n  \"nomad_score\": 8,\n  \"salary_info\": \"e.g. €20/h or Not specified\",\n  \"key_skills\": [\"Python\", \"n8n\", \"Support\"],\n  \"application_url\": \"{{ $json.url }}\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        624
+      ],
+      "id": "e8d198a2-dd7f-47a8-9701-f2b327670387",
+      "name": "Information Extractor Jobs"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        384,
+        1072
+      ],
+      "id": "94f9555f-1390-4d04-aa6d-894bcec2c09c",
+      "name": "Loop Over Logging Jobs"
+    },
+    {
+      "parameters": {
+        "content": "## Output",
+        "height": 416,
+        "width": 1264,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        1024
+      ],
+      "typeVersion": 1,
+      "id": "fb47251a-76bb-48cf-a0bd-8e63070524be",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        1072
+      ],
+      "id": "8276591d-60d3-47bb-b71a-06050cffce02",
+      "name": "Aggregate Found Jobs"
+    },
+    {
+      "parameters": {
+        "sendTo": "din.epost@example.com",
+        "subject": "Daily Job Search",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; color: #333; margin: 0; padding: 20px; }\n  .container { max-width: 600px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }\n  .header { background: #1a73e8; color: white; padding: 30px 20px; text-align: center; }\n  .header h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }\n  .job-card { padding: 25px; border-bottom: 1px solid #edf2f7; position: relative; }\n  .job-card:last-child { border-bottom: none; }\n  .nomad-badge { background: #fff8e1; color: #b45309; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; float: right; border: 1px solid #fef3c7; }\n  .title { font-size: 19px; margin: 0 0 5px 0; color: #1a73e8; font-weight: 700; line-height: 1.2; }\n  .company { color: #64748b; font-size: 15px; font-weight: 500; margin-bottom: 15px; display: block; }\n  .stats-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }\n  .stat-pill { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }\n  .summary { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; }\n  .skill-container { margin-bottom: 20px; }\n  .skill-tag { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 0 4px 4px 0; font-weight: 500; }\n  .btn { display: block; text-align: center; background: #1a73e8; color: white !important; padding: 12px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; transition: background 0.2s; }\n  .footer { padding: 20px; font-size: 12px; color: #94a3b8; text-align: center; background: #f8fafc; }\n</style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>Job Possibilites </h1>\n    </div>\n\n    {{ $json.data.map(item => {\n      const job = item.output;\n      return `\n      <div class=\"job-card\">\n        <span class=\"nomad-badge\">Nomad Score: ${job.nomad_score}</span>\n        <div class=\"title\">${job.job_title}</div>\n        <span class=\"company\">${job.company_name}</span>\n\n        <div class=\"stats-grid\">\n          <span class=\"stat-pill\"> ${job.work_hours}</span>\n          <span class=\"stat-pill\"> ${job.location_type}</span>\n          <span class=\"stat-pill\"> ${job.salary_info}</span>\n          <span class=\"stat-pill\"> ${job.geographical_requirements}</span>\n        </div>\n\n        <div class=\"summary\">\n          ${job.summary_sv}\n        </div>\n\n        <div class=\"skill-container\">\n          ${job.key_skills ? job.key_skills.map(skill => `<span class=\"skill-tag\">${skill}</span>`).join('') : ''}\n        </div>\n\n        <a href=\"${job.application_url}\" class=\"btn\">Gå till ansökan</a>\n      </div>\n      `;\n    }).join('') }}\n\n    <div class=\"footer\">\n      Found via personal n8n-automation.<br>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        1264
+      ],
+      "id": "e922d8d8-765b-4502-a2c8-241a8027755e",
+      "name": "Send Formatted Mail"
+    },
+    {
+      "parameters": {
+        "content": "## Description: \nThis workflow works by using **Google Sheets** as a relational database with sheets containing data. With this data the workflow scrapes job postings and matches them to choosen data from google sheets and sends a formatted mail with interesting job postings",
+        "height": 144,
+        "width": 528,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        -1168
+      ],
+      "typeVersion": 1,
+      "id": "43b17e90-456e-44c7-9ef9-aab5ec59b050",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        656,
+        432
+      ],
+      "id": "631493b9-1af2-4169-b721-738ae1b6b92d",
+      "name": "Discarded Job Posting"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "34a42dcf-09a0-493e-85e9-22f14d9e4211",
+              "leftValue": "={{ $json.slug }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        416
+      ],
+      "id": "dc214a1d-3f59-46a3-8cd3-d772944c4466",
+      "name": "Job Posting - Keep/Not"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Job Searcher - Wide"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        -576
+      ],
+      "id": "4f042d38-52e7-4337-8ee8-004a16eade7b",
+      "name": "When Executed by Job Master Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "YOUR_GMAIL_LABEL_ID"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        1264
+      ],
+      "id": "23950b21-f326-4642-9524-506b8585e026",
+      "name": "Add Label to Mail"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor Jobs",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request RemoteOk": {
+      "main": [
+        [
+          {
+            "node": "Merge Found Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Himalayas": {
+      "main": [
+        [
+          {
+            "node": "Merge Found Jobs",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get Job URL:s ": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request JobTechDev": {
+      "main": [
+        [
+          {
+            "node": "Merge Found Jobs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Validate Against Keywords": {
+      "main": [
+        [
+          {
+            "node": "Job Posting - Keep/Not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Split Out Job URL:s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Job URL:s": {
+      "main": [
+        [
+          {
+            "node": "Switch Contains Job URL:s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Contains Job URL:s": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request RemoteOk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request JobTechDev",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Himalayas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Found Jobs": {
+      "main": [
+        [
+          {
+            "node": "Validate Against Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Place of Work": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Place of Work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Roles": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Roles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Skills": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Skills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Time": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Roles": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Aggregate Skills": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Aggregate Time": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Aggregate Place of Work": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Get Logged Jobs": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Logged Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Logged Jobs": {
+      "main": [
+        [
+          {
+            "node": "Merge Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Job To Found Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Logging Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Job Postings": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Found Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Job Postings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Logging Jobs": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Append Job To Found Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Found Jobs": {
+      "main": [
+        [
+          {
+            "node": "Send Formatted Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Formatted Mail": {
+      "main": [
+        [
+          {
+            "node": "Add Label to Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Posting - Keep/Not": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Logging Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Job Postings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discarded Job Posting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Job Master Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Logged Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Job URL:s ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Skills",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Time",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Place of Work",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Roles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

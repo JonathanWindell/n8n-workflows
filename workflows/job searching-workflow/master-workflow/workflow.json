@@ -1,0 +1,196 @@
+{
+  "name": "Master Job Searcher - Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        -16
+      ],
+      "id": "e02d259a-39f0-499a-a66e-b8edbdeac107",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "K111dxKVV45NqDKQ6Xdyo",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/K111dxKVV45NqDKQ6Xdyo",
+          "cachedResultName": "Job Searcher - Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        -16
+      ],
+      "id": "5d574ab8-3eee-4315-852a-07c4e936cfee",
+      "name": "Execute Job Searcher"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CE_SWmpNcC5Qdt-bKrZT0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/CE_SWmpNcC5Qdt-bKrZT0",
+          "cachedResultName": "Adzuna Job Searcher - Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        -16
+      ],
+      "id": "8990bfb1-4bd5-4529-990f-83c7c2e96070",
+      "name": "Execute Adzuna Job Searcher"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "134c9860-62f5-4acf-8daf-58cb3bf07956",
+      "name": "Wait",
+      "webhookId": "74795a1c-c4c7-4fa3-86db-34d55c871137"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -16
+      ],
+      "id": "3f9f6f0a-33ed-4dba-be1b-149803a13922",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "content": "## Input",
+        "height": 208,
+        "width": 1088,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "1b003f72-2969-402e-9fbd-8c87ac7c811e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Description\nThis master workflow executes **Job Searcher Wide** and **Job Searcher Adzuna** workflows",
+        "height": 96,
+        "width": 416,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "3730d1c5-d9ce-41e0-988c-888b1e0db764",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute Job Searcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Job Searcher": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Adzuna Job Searcher": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Execute Adzuna Job Searcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a93df573-2cac-4257-8469-6a70f1fcb5a8",
+  "meta": {
+    "instanceId": "55bd2fce4552f94dfb7222647d9ecd849c536ed6b324a62e1a7e414fb2fb30a6"
+  },
+  "id": "06-ERHmzWsPoSBRtjJuZT",
+  "tags": []
+}
