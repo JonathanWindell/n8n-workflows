@@ -14,7 +14,7 @@ Keeping versions of your workflows safe is critical. This workflow acts as an au
 
 ## Architecture
 To view the design of the workflow, press here:
-- [Architecture](./Architecture.md)
+- [Architecture](./architecture.md)
 
 ## Prerequisites
 Before importing this workflow, ensure you have:

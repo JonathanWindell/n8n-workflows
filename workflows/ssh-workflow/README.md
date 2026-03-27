@@ -16,7 +16,7 @@ Keeping home lab servers patched can be tedious. This workflow automates the mon
 
 ## Architecture
 To view the design of the workflow, press here. 
-- [Architecture](./Architecture.md)
+- [Architecture](./architecture.md)
 
 ## Prerequisites
 Before importing this workflow, ensure you have:

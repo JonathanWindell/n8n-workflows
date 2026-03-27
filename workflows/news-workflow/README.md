@@ -14,7 +14,7 @@ This workflow is designed to combat information overload. Instead of scrolling t
 
 ## Architecture
 To view the design of the workflow, press here:
-- [Architecture](./Architecture.md)
+- [Architecture](./architecture.md)
 
 ## Prerequisites
 Before importing this workflow, ensure you have:
