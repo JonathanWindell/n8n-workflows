@@ -1,0 +1,112 @@
+{
+  "name": "Agnostic Stock Information Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5,
+              "triggerAtMinute": 40
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [96, -512],
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@gmail.com",
+        "subject": "Daily Stock Information",
+        "message": "={{ $json.subject }} {{ $json.htmlBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [80, 816],
+      "id": "gmail-send",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": ["YOUR_LABEL_ID"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [336, 816],
+      "id": "gmail-label",
+      "name": "Add label to message",
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst tickers = input[\"Ticker\"] || [];\nconst prices = input[\"Price\"] || [];\nconst changes = input[\"Change Percentage\"] || [];\nconst summaries = input[\"Summary\"] || [];\n\nlet htmlEmail = `\n<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: auto; background-color: #f9f9f9; padding: 20px;\">\n  <div style=\"background-color: #1a2a3a; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 26px; font-weight: 600;\">Morning Brief: Portfölj 📈</h1>\n    <p style=\"margin: 5px 0 0; opacity: 0.8; font-size: 14px;\">${new Date().toISOString().split('T')[0]}</p>\n  </div>\n  <div style=\"background-color: #ffffff; border: 1px solid #e0e6ed; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden;\">\n`;\n\nfor (let i = 0; i < tickers.length; i++) {\n    const ticker = tickers[i] || \"Okänt innehav\";\n    const price = prices[i] || \"-\";\n    const change = (changes[i] !== undefined) ? changes[i] : \"0%\";\n    const aiSummary = summaries[i] || \"Ingen analys tillgänglig för tillfället.\";\n\n    const isPositive = !String(change).includes('-');\n    const color = isPositive ? '#27ae60' : '#e74c3c';\n    const arrow = isPositive ? '▲' : '▼';\n\n    htmlEmail += `\n    <div style=\"padding: 25px; border-bottom: 1px solid #f0f4f8;\">\n      <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">\n        <span style=\"font-size: 20px; font-weight: 800; color: #1a2a3a;\">${ticker}</span>\n        <div style=\"background-color: ${color}15; color: ${color}; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 14px;\">\n          ${arrow} ${price} (${change}${typeof change === 'number' ? '%' : ''})\n        </div>\n      </div>\n      <div style=\"font-size: 15px; line-height: 1.7; color: #444;\">\n        ${aiSummary} \n      </div>\n    </div>\n    `;\n}\n\nhtmlEmail += `\n    <div style=\"padding: 20px; text-align: center; font-size: 12px; color: #95a5a6; background-color: #fdfdfd;\">\n      Genererat via n8n & AI • Finansiell data från Google Finance\n    </div>\n  </div>\n</div>\n`;\n\nreturn [{ json: { htmlBody: htmlEmail, subject: `Börsrapport: ${new Date().toISOString().split('T')[0]}` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [656, -96],
+      "id": "format-mail",
+      "name": "Format Mail"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_SHEET_NAME",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [592, -320],
+      "id": "get-info",
+      "name": "Get stock information",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [304, 608],
+      "id": "groq-model",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "Get stock information", "type": "main", "index": 0 }]] },
+    "Format Mail": { "main": [[{ "node": "Send a message", "type": "main", "index": 0 }]] }
+  }
+}
