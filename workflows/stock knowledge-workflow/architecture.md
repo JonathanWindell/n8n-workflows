@@ -1,4 +1,4 @@
-# SSH Workflow
+# Stock Information - Workflow
 
 ## Input & Validation
 ![Input & Validation](./images/Input%20&%20Validation.png)
