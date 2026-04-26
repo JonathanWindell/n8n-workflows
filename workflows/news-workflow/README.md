@@ -1,9 +1,9 @@
-# 📰 Tech News Aggregator & AI Summarizer Workflow
+# Tech News Aggregator & AI Summarizer Workflow
 
 ## Highlights
-[![n8n](https://img.shields.io/badge/n8n-FF6D5B?logo=n8n&logoColor=white)](#)
-[![Gmail](https://img.shields.io/badge/Gmail-EA4335?logo=gmail&logoColor=white)](#)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)](#)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
+![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/google%20gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white)
 
 * **RSS Parsing & Filtering:** Connects to multiple RSS feeds and filters articles using a highly customizable keyword list (e.g., "Kubernetes", "Nvidia", "Zero-day").
 * **AI Summarization:** Utilizes an LLM to read the full text of matching articles and generates concise, bulleted HTML summaries. It even automatically detects and outputs in the source language!

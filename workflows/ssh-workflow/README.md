@@ -1,10 +1,9 @@
 # Proxmox & LXC Automated Updater Workflow
 
 ## Highlights
-[![n8n](https://img.shields.io/badge/n8n-FF6D5B?logo=n8n&logoColor=white)](#)
-[![Proxmox](https://img.shields.io/badge/Proxmox-E57000?logo=proxmox&logoColor=white)](#)
-[![SSH](https://img.shields.io/badge/SSH-231F20?logo=ssh&logoColor=white)](#)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](#)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
+![Proxmox](https://img.shields.io/badge/proxmox-proxmox?style=for-the-badge&logo=proxmox&logoColor=%23E57000&labelColor=%232b2a33&color=%232b2a33)
+![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)
 
 * **Fully Automated Maintenance:** Runs on a defined schedule to keep your Proxmox server and its containers up to date without manual intervention.
 * **Pre-flight Health Checks:** Pings the Proxmox web interface before attempting SSH connections, immediately alerting you if the server is offline.

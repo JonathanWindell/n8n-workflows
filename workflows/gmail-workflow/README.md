@@ -1,9 +1,9 @@
 # AI-Powered Gmail Classifier & Inbox Organizer
-[![n8n](https://img.shields.io/badge/n8n-FF6D5B?logo=n8n&logoColor=white)](#)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)](#)
-[![Gmail](https://img.shields.io/badge/Gmail-EA4335?logo=gmail&logoColor=white)](#)
-[![Telegram](https://img.shields.io/badge/Telegram-26A69A?logo=telegram&logoColor=white)](#)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](#)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/google%20gemini-8E75B2?style=for-the-badge&logo=google%20gemini&logoColor=white)
+![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)
 
 A sophisticated email management system that transforms your cluttered inbox into a structured, categorized archive. By leveraging **Google Gemini** for deep text analysis, this workflow automatically classifies emails into 10 distinct categories, triggers high-priority alerts via **Telegram** and **Discord**, and enforces "Inbox Zero" by automatically archiving processed mail.
 

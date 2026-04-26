@@ -1,9 +1,9 @@
 # Automated n8n to GitHub Backup Workflow
 
 ## Highlights
-[![n8n](https://img.shields.io/badge/n8n-FF6D5B?logo=n8n&logoColor=white)](#)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)](#)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](#)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
+![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=for-the-badge&logo=discord&logoColor=white)
 
 * **GitOps for n8n:** Automatically backs up your active n8n workflows directly to a GitHub repository.
 * **Smart Diffing (No empty commits!):** Uses a custom JavaScript node to strip out dynamic metadata (like `updatedAt`, `versionId`, and canvas coordinates) before comparing. It only commits to GitHub if you *actually* made logical changes to the nodes!
