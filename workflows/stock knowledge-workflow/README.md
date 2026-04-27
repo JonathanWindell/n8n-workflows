@@ -18,8 +18,8 @@ Before importing these workflows, ensure you have:
 1. A running **n8n instance** (Self-hosted via Docker, Desktop app, or n8n Cloud).
 2. A **Gmail Account** configured with OAuth credentials in n8n (or standard IMAP credentials).
 3. A **Google Sheets Account** configured with OAuth credentials in n8n (or standard IMAP credentials).
-4. An API key for your **LLM of choice** (Gemini, OpenAI, etc.). 
-5. An API key for **SearchAPI**. You can create one here [SearchAPI](https://www.searchapi.io/). 
+4. An API key for your **LLM of choice** (Gemini, OpenAI, etc.). > **Note:** This workflow is configured with **Groq** using *Llama 3.3-70b-versatile*. You can set it up here [Groq LLM](https://console.groq.com/keys). 
+5. An API key for **Brave Search API**. You can create one here [Brave Search API](https://brave.com/search/api/). 
 
 ## Usage Instructions
 1. Copy the contents of the `workflow.json` file.

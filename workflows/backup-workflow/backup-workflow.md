@@ -2,16 +2,15 @@
 graph TD
     %% SUBGRAPH: INPUT & VALIDATION (n8n Blue)
     subgraph Input [Input & Validation]
-        A1[Schedule Trigger] --> B1[Get a workflow version]
-        A1 --> B2[Get a file]
-        A2[When clicking Execute] --> B1
-        A2 --> B2
-        
-        B1 --> C1[n8n node - Set name]
-        B2 --> C2[Github node - Set name]
-        
-        C1 & C2 --> D[Merge Github & n8n]
+       A1[When clicking execute] --> B[Get many workflows]
+       A2[Schedule Trigger] --> B[Get many workflows]
+       B --> B2[Split workflows]
+       A1[When clicking execute] --> C[Loop over github workflow version]
+       A2[When clicking execute] --> C[Loop over github workflow version]
     end
+
+    C --> D[Merge data streams]
+    B2 --> D[Merge data streams]
 
     D --> E
 

@@ -1,5 +1,5 @@
 {
-  "name": "Agnostic Stock Information Workflow",
+  "name": "Agnostic Stock Information - Workflow",
   "nodes": [
     {
       "parameters": {
@@ -20,48 +20,27 @@
     },
     {
       "parameters": {
-        "sendTo": "YOUR_EMAIL@gmail.com",
-        "subject": "Daily Stock Information",
-        "message": "={{ $json.subject }} {{ $json.htmlBody }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [80, 816],
-      "id": "gmail-send",
-      "name": "Send a message",
-      "credentials": {
-        "gmailOAuth2": {
-          "name": "Gmail account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "addLabels",
-        "messageId": "={{ $json.id }}",
-        "labelIds": ["YOUR_LABEL_ID"]
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [336, 816],
-      "id": "gmail-label",
-      "name": "Add label to message",
-      "credentials": {
-        "gmailOAuth2": {
-          "name": "Gmail account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst tickers = input[\"Ticker\"] || [];\nconst prices = input[\"Price\"] || [];\nconst changes = input[\"Change Percentage\"] || [];\nconst summaries = input[\"Summary\"] || [];\n\nlet htmlEmail = `\n<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: auto; background-color: #f9f9f9; padding: 20px;\">\n  <div style=\"background-color: #1a2a3a; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 26px; font-weight: 600;\">Morning Brief: Portfölj 📈</h1>\n    <p style=\"margin: 5px 0 0; opacity: 0.8; font-size: 14px;\">${new Date().toISOString().split('T')[0]}</p>\n  </div>\n  <div style=\"background-color: #ffffff; border: 1px solid #e0e6ed; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden;\">\n`;\n\nfor (let i = 0; i < tickers.length; i++) {\n    const ticker = tickers[i] || \"Okänt innehav\";\n    const price = prices[i] || \"-\";\n    const change = (changes[i] !== undefined) ? changes[i] : \"0%\";\n    const aiSummary = summaries[i] || \"Ingen analys tillgänglig för tillfället.\";\n\n    const isPositive = !String(change).includes('-');\n    const color = isPositive ? '#27ae60' : '#e74c3c';\n    const arrow = isPositive ? '▲' : '▼';\n\n    htmlEmail += `\n    <div style=\"padding: 25px; border-bottom: 1px solid #f0f4f8;\">\n      <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">\n        <span style=\"font-size: 20px; font-weight: 800; color: #1a2a3a;\">${ticker}</span>\n        <div style=\"background-color: ${color}15; color: ${color}; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 14px;\">\n          ${arrow} ${price} (${change}${typeof change === 'number' ? '%' : ''})\n        </div>\n      </div>\n      <div style=\"font-size: 15px; line-height: 1.7; color: #444;\">\n        ${aiSummary} \n      </div>\n    </div>\n    `;\n}\n\nhtmlEmail += `\n    <div style=\"padding: 20px; text-align: center; font-size: 12px; color: #95a5a6; background-color: #fdfdfd;\">\n      Genererat via n8n & AI • Finansiell data från Google Finance\n    </div>\n  </div>\n</div>\n`;\n\nreturn [{ json: { htmlBody: htmlEmail, subject: `Börsrapport: ${new Date().toISOString().split('T')[0]}` } }];"
+        "jsCode": "const input = $input.first().json;\n\nconst tickers = input[\"Ticker\"] || [];\nconst prices = input[\"Price\"] || [];\nconst changes = input[\"Change Percentage\"] || [];\nconst summaries = input[\"Summary\"] || [];\n\nlet htmlEmail = `\n<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: auto; background-color: #f9f9f9; padding: 20px;\">\n  <div style=\"background-color: #1a2a3a; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 26px; font-weight: 600;\">Morning Brief: Portfölj 📈</h1>\n    <p style=\"margin: 5px 0 0; opacity: 0.8; font-size: 14px;\">${new Date().toISOString().split('T')[0]}</p>\n  </div>\n  <div style=\"background-color: #ffffff; border: 1px solid #e0e6ed; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden;\">\n`;\n\nfor (let i = 0; i < tickers.length; i++) {\n    const ticker = tickers[i] || \"Okänt innehav\";\n    const price = prices[i] || \"-\";\n    const change = (changes[i] !== undefined) ? changes[i] : \"0%\";\n    const aiSummary = summaries[i] || \"Ingen analys tillgänglig för tillfället.\";\n\n    const isPositive = !String(change).includes('-');\n    const color = isPositive ? '#27ae60' : '#e74c3c';\n    const arrow = isPositive ? '▲' : '▼';\n\n    htmlEmail += `\n    <div style=\"padding: 25px; border-bottom: 1px solid #f0f4f8;\">\n      <div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;\">\n        <span style=\"font-size: 20px; font-weight: 800; color: #1a2a3a;\">${ticker}</span>\n        <div style=\"background-color: ${color}15; color: ${color}; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 14px;\">\n          ${arrow} ${price} (${change}${typeof change === 'number' ? '%' : ''})\n        </div>\n      </div>\n      \n      <div style=\"font-size: 15px; line-height: 1.7; color: #444;\">\n        ${aiSummary} \n      </div>\n    </div>\n    `;\n}\n\nif (tickers.length === 0) {\n    htmlEmail += `<div style=\"padding: 40px; text-align: center; color: #7f8c8d;\">No data was found for your holdings today.</div>`;\n}\n\nhtmlEmail += `\n    <div style=\"padding: 20px; text-align: center; font-size: 12px; color: #95a5a6; background-color: #fdfdfd;\">\n      Genererat via n8n & AI • Finansiell data från Google Finance\n    </div>\n  </div>\n</div>\n`;\n\nreturn [{ json: { htmlBody: htmlEmail, subject: `Börsrapport: ${new Date().toISOString().split('T')[0]}` } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [656, -96],
       "id": "format-mail",
       "name": "Format Mail"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following search results for {{ $json.ticker }}. \nCreate a summary with the 3 most important news.\n\nRULES:\n1. For each news item, include a link in the format: <a href=\"URL\">Read more</a>.\n2. Use HTML only (<ul>, <li>, <strong>, <a>). No stars or markdown.\n3. Language: Swedish.\n\nDATA:\n{{ $json.formattedNews }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [304, 384],
+      "id": "summarize-context",
+      "name": "Summarize Context ",
+      "retryOnFail": true,
+      "waitBetweenTries": 4000
     },
     {
       "parameters": {
@@ -72,7 +51,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "YOUR_SHEET_NAME",
+          "value": "YOUR_SHEET_NAME_OR_GID",
           "mode": "id"
         },
         "options": {}
@@ -80,13 +59,23 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [592, -320],
-      "id": "get-info",
+      "id": "get-stocks",
       "name": "Get stock information",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const newsItems = $json.web?.results || [];\nconst currentTicker = $('Loop over stocks').item.json.Ticker || \"Unknown\";\n\nlet newsText = \"\";\n\nif (newsItems.length > 0) {\n    newsText = newsItems.map((news, index) => {\n        const title = news.title || \"No Title\";\n        const snippet = news.description || news.snippet || \"No Description\";\n        const link = news.url || news.link || \"#\";\n        const source = news.profile?.name || news.meta_url?.hostname || \"Unknown Source\";\n        \n        return `NEWS ${index + 1}:\\nSource: ${source}\\nTitle: ${title}\\nInfo: ${snippet}\\nLink: ${link}\\n-------------------`;\n    }).join('\\n\\n');\n} else {\n    newsText = \"No news found for this ticker in the last 24 hours.\";\n}\n\nreturn {\n    ticker: currentTicker, \n    formattedNews: newsText\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [656, 176],
+      "id": "format-news",
+      "name": "Format stock news"
     },
     {
       "parameters": {
@@ -103,10 +92,97 @@
           "name": "Groq account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "YOUR_UPDATE_SHEET_NAME_OR_GID",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": ["timestamp"]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [592, -512],
+      "id": "force-update",
+      "name": "Force update google finance",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "YOUR_EMAIL@gmail.com",
+        "subject": "Daily Stock Information",
+        "message": "={{ $json.subject }} {{ $json.htmlBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [80, 816],
+      "id": "gmail-send",
+      "name": "Send a mail",
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": ["YOUR_LABEL_ID"]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [336, 816],
+      "id": "gmail-label",
+      "name": "Add correct label to mail",
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "=\"{{ $input.item.json.Company }}\" (nyheter OR rapport OR order OR avtal)"
+      },
+      "type": "@brave/n8n-nodes-brave-search.braveSearch",
+      "typeVersion": 1,
+      "position": [368, 176],
+      "id": "brave-search",
+      "name": "Brave Search",
+      "credentials": {
+        "braveSearchApi": {
+          "name": "Brave Search account"
+        }
+      }
     }
   ],
   "connections": {
-    "Schedule Trigger": { "main": [[{ "node": "Get stock information", "type": "main", "index": 0 }]] },
-    "Format Mail": { "main": [[{ "node": "Send a message", "type": "main", "index": 0 }]] }
+    "Schedule Trigger": { "main": [[{ "node": "Force update google finance", "type": "main", "index": 0 }]] },
+    "Format Mail": { "main": [[{ "node": "Send a mail", "type": "main", "index": 0 }]] },
+    "Get stock information": { "main": [[{ "node": "Loop over stocks", "type": "main", "index": 0 }]] },
+    "Summarize Context ": { "main": [[{ "node": "Rename stock information", "type": "main", "index": 0 }]] },
+    "Format stock news": { "main": [[{ "node": "Wait for AI summarize", "type": "main", "index": 0 }]] },
+    "Force update google finance": { "main": [[{ "node": "Wait for updated data", "type": "main", "index": 0 }]] },
+    "Send a mail": { "main": [[{ "node": "Add correct label to mail", "type": "main", "index": 0 }]] },
+    "Brave Search": { "main": [[{ "node": "Format stock news", "type": "main", "index": 0 }]] }
   }
 }
