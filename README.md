@@ -20,12 +20,13 @@ I'm Jonathan and I develop projects in my sparetime that help myself and others 
 
 | Name | Description | Status |
 | :--- | :--- | :--- |
-| [ Gmail Workflow](./workflows/gmail-workflow/README.md) | Automates email filtering and AI-driven categorization. Notifications through Discord & Telegram | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
-| [ News Workflow](./workflows/news-workflow/README.md) | Scrapes specific sources and delivers summaries via HTML formatted mail. |  ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
-| [ Backup Workflow](./workflows/backup-workflow/README.md) | Automates database or file backups to github. | ![Updates](https://img.shields.io/badge/Status-Updates-orange?style=flat-square) - *V2 In Progress* |
-| [ SSH Workflow](./workflows/ssh-workflow/README.md) | Executes remote commands to proxmox server for updating lxc & docker containers. | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
-| [ Budget Workflow](./workflows/budget-workflow/README.md) | Automates expense tracking using AI, Google Drive & Sheets | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
-| [ Job Searching Workflow](./workflows/job%20searching-workflow/) | Fetch job postings based on choosen keywords and send personalised mail | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Gmail Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/gmail-workflow) | Automates email filtering and AI-driven categorization. Notifications through Discord & Telegram | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ News Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/news-workflow) | Scrapes specific sources and delivers summaries via HTML formatted mail. |  ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Backup Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/backup-workflow) | Automates database or file backups to github. | ![Updates](https://img.shields.io/badge/Status-Updates-orange?style=flat-square) - *V2 In Progress* |
+| [ SSH Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/ssh-workflow) | Executes remote commands to proxmox server for updating lxc & docker containers. | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Budget Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/budget-workflow) | Automates expense tracking using AI, Google Drive & Sheets | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Job Searching Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/job%20searching-workflow) | Fetch job postings based on choosen keywords and send personalised mail | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
+| [ Stock Information Workflow](https://github.com/JonathanWindell/n8n-workflows/tree/main/workflows/stock%20knowledge-workflow) | Fetch chosen stock news using google finance & web searches | ![Active](https://img.shields.io/badge/Status-Active-success?style=flat-square) |
 | *In Progress: CV & Cover Letter Manipulation* | Manipulate CV & Cover Letter based on requirements for job | ![Status](https://img.shields.io/badge/Status-Upcoming-lightgrey?style=flat-square) |
 
 # Usage Instructions
